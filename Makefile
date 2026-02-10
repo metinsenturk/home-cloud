@@ -3,7 +3,11 @@
 # Usage:
 #   make create-network   # Creates the home_network if it doesn't exist
 
+#   make up-base         # Launches base services (Traefik, etc.)
+
 NETWORK_NAME=home_network
+
+BASE_COMPOSE=docker compose --env-file .env -f base/docker-compose.yml
 
 .PHONY: create-network
 create-network:
@@ -13,3 +17,17 @@ create-network:
 		docker network create $(NETWORK_NAME); \
 		echo "Network '$(NETWORK_NAME)' created."; \
 	fi
+
+.PHONY: up-base
+up-base:
+	$(BASE_COMPOSE) up -d
+	@echo "Base services launched."
+
+.PHONY: down-base
+down-base:
+	$(BASE_COMPOSE) down
+	@echo "Base services stopped."
+
+.PHONY: recreate-base
+recreate-base: down-base up-base
+	@echo "Base services recreated."
