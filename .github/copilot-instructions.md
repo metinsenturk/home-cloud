@@ -21,6 +21,8 @@ When generating a new app in `/apps/<name>/docker-compose.yml`, always follow th
    - `traefik.http.routers.<name>.rule=Host('<name>.localhost')`
    - `traefik.http.services.<name>.loadbalancer.server.port=<port>`
 4. Avoid using version key in `docker-compose.yml` (use the latest syntax).
+5. Avoid hardcoding ports in the compose file; rely on Traefik for routing.
+6. Always set the keys in the same order for consistency unser services: image, container_name, restart, command, ports, networks, volumes, labels, environment, logging, healthcheck, depends_on.
 
 ## Makefile Integration
 - New services should be added as variables at the top of the root `Makefile`.
