@@ -20,6 +20,7 @@ When generating a new app in `/apps/<name>/docker-compose.yml`, always follow th
 3. **Labels:** - `traefik.enable=true`
    - `traefik.http.routers.<name>.rule=Host('<name>.localhost')`
    - `traefik.http.services.<name>.loadbalancer.server.port=<port>`
+4. Avoid using version key in `docker-compose.yml` (use the latest syntax).
 
 ## Makefile Integration
 - New services should be added as variables at the top of the root `Makefile`.
