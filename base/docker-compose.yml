@@ -15,7 +15,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080" # Traefik dashboard
+      # - "8080:8080" # Traefik dashboard
     networks:
       - home_network
     volumes:
@@ -39,8 +39,6 @@ services:
     restart: unless-stopped
     # Dozzle provides a simple web UI for viewing Docker container logs in real-time.
     # It requires access to the Docker socket to read logs from all containers.
-    ports:
-      - "9999:8080" # Web UI port (also exposed via Traefik)
     networks:
       - home_network
     volumes:
