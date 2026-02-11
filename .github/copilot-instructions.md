@@ -21,6 +21,8 @@ When generating a new app in `/apps/<name>/docker-compose.yml`, always follow th
    - `traefik.enable=true`
    - `traefik.http.routers.<name>.rule=Host('<name>.localhost')`
    - `traefik.http.services.<name>.loadbalancer.server.port=<port>`
+* **Multi-Network Routing:** If a container is connected to more than one network, you **MUST** explicitly tell Traefik which network to use for routing to avoid 504 errors.
+  * **Label:** `- "traefik.docker.network=home_network"`
 4. Avoid using version key in `docker-compose.yml` (use the latest syntax).
 5. Avoid hardcoding ports in the compose file; rely on Traefik for routing.
 6. **Ordering:** Follow the strict key order: `image`, `container_name`, `restart`, `command`, `ports`, `networks`, `volumes`, `labels`, `environment`, `logging`, `healthcheck`, `depends_on`, `env_file`.

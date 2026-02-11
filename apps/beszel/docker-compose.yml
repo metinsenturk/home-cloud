@@ -13,6 +13,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.beszel.rule=Host(`beszel.${DOMAIN}`)"
       - "traefik.http.services.beszel.loadbalancer.server.port=8090"
+      - "traefik.docker.network=home_network"
     environment:
       - TZ=${TZ}
       # APP_URL must match the public URL so redirects and links are correct.

@@ -48,6 +48,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.infisical.rule=Host(`secrets.${DOMAIN}`)"
       - "traefik.http.services.infisical.loadbalancer.server.port=8080"
+      - "traefik.docker.network=home_network"
     environment:
       - TZ=${TZ}
       - DB_CONNECTION_URI=postgres://${INFISICAL_DB_USER}:${INFISICAL_DB_PASSWORD}@infisical-db:5432/${INFISICAL_DB_NAME}
