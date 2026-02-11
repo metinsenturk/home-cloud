@@ -4,14 +4,16 @@ services:
     container_name: infisical_db
     restart: unless-stopped
     # PostgreSQL database for Infisical secret management.
+    env_file:
+      - .env
     networks:
       - infisical_network
     volumes:
       - infisical_db_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=infisical
-      - POSTGRES_PASSWORD=infisical_db_password
-      - POSTGRES_DB=infisical
+      - POSTGRES_USER=${INFISICAL_DB_USER:-infisical}
+      - POSTGRES_PASSWORD=${INFISICAL_DB_PASSWORD:-infisical}
+      - POSTGRES_DB=${INFISICAL_DB_NAME:-infisical}
     logging:
       driver: "json-file"
       options:
@@ -39,6 +41,8 @@ services:
     depends_on:
       - infisical-db
       - infisical-redis
+    env_file:
+      - .env
     networks:
       - home_network
       - infisical_network
@@ -48,11 +52,11 @@ services:
       - "traefik.http.services.infisical.loadbalancer.server.port=8080"
     environment:
       - TZ=${TZ}
-      - DB_CONNECTION_URI=postgres://infisical:infisical_db_password@infisical-db:5432/infisical
+      - DB_CONNECTION_URI=postgres:// ${INFISICAL_DB_USER:-infisical}:${INFISICAL_DB_PASSWORD:-infisical}@infisical-db:5432/${INFISICAL_DB_NAME:-infisical}
       - REDIS_URL=redis://infisical-redis:6379
       - SITE_URL=http://secrets.${DOMAIN}
-      - ENCRYPTION_KEY=change-this-to-a-random-32-character-string
-      - AUTH_SECRET=change-this-to-another-random-32-character-string
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - AUTH_SECRET=${AUTH_SECRET}
     logging:
       driver: "json-file"
       options:

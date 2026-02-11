@@ -12,6 +12,17 @@ Infisical is an open-source secret management platform that helps you manage env
 
 - Web UI: http://secrets.localhost (via Traefik)
 
+## Starting this App
+
+Start from the app folder.
+
+> cd apps/infisical
+> docker compose --env-file ../../.env --env-file .env -f docker-compose.yml up -d
+
+From the root of the folder.
+
+> make up-infisical
+
 ## Configuration
 
 ### Important Security Settings
