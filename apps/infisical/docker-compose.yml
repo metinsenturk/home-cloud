@@ -1,0 +1,68 @@
+services:
+  infisical-db:
+    image: postgres:16-alpine
+    container_name: infisical_db
+    restart: unless-stopped
+    # PostgreSQL database for Infisical secret management.
+    networks:
+      - infisical_network
+    volumes:
+      - infisical_db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=infisical
+      - POSTGRES_PASSWORD=infisical_db_password
+      - POSTGRES_DB=infisical
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+
+  infisical-redis:
+    image: redis:7-alpine
+    container_name: infisical_redis
+    restart: unless-stopped
+    # Redis cache for Infisical.
+    networks:
+      - infisical_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+
+  infisical:
+    image: infisical/infisical:latest
+    container_name: infisical
+    restart: unless-stopped
+    # Infisical provides centralized secret management with a web UI.
+    # Requires PostgreSQL and Redis for operation.
+    # This is the public-facing service that connects to home_network for Traefik routing.
+    depends_on:
+      - infisical-db
+      - infisical-redis
+    networks:
+      - home_network
+      - infisical_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.infisical.rule=Host(`secrets.${DOMAIN}`)"
+      - "traefik.http.services.infisical.loadbalancer.server.port=8080"
+    environment:
+      - TZ=${TZ}
+      - DB_CONNECTION_URI=postgres://infisical:infisical_db_password@infisical-db:5432/infisical
+      - REDIS_URL=redis://infisical-redis:6379
+      - SITE_URL=http://secrets.${DOMAIN}
+      - ENCRYPTION_KEY=change-this-to-a-random-32-character-string
+      - AUTH_SECRET=change-this-to-another-random-32-character-string
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+
+networks:
+  home_network:
+    external: true
+  infisical_network:
+    driver: bridge
+
+volumes:
+  infisical_db_data:
