@@ -7,13 +7,13 @@ services:
     env_file:
       - .env
     networks:
-      - infisical_network
+      - home_infisical_network
     volumes:
-      - infisical_db_data:/var/lib/postgresql/data
+      - home_infisical_db_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=${INFISICAL_DB_USER:-infisical}
-      - POSTGRES_PASSWORD=${INFISICAL_DB_PASSWORD:-infisical}
-      - POSTGRES_DB=${INFISICAL_DB_NAME:-infisical}
+      - POSTGRES_USER=${INFISICAL_DB_USER}
+      - POSTGRES_PASSWORD=${INFISICAL_DB_PASSWORD}
+      - POSTGRES_DB=${INFISICAL_DB_NAME}
     logging:
       driver: "json-file"
       options:
@@ -25,7 +25,7 @@ services:
     restart: unless-stopped
     # Redis cache for Infisical.
     networks:
-      - infisical_network
+      - home_infisical_network
     logging:
       driver: "json-file"
       options:
@@ -41,18 +41,16 @@ services:
     depends_on:
       - infisical-db
       - infisical-redis
-    env_file:
-      - .env
     networks:
       - home_network
-      - infisical_network
+      - home_infisical_network
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.infisical.rule=Host(`secrets.${DOMAIN}`)"
       - "traefik.http.services.infisical.loadbalancer.server.port=8080"
     environment:
       - TZ=${TZ}
-      - DB_CONNECTION_URI=postgres://${INFISICAL_DB_USER:-infisical}:${INFISICAL_DB_PASSWORD:-infisical}@infisical-db:5432/${INFISICAL_DB_NAME:-infisical}
+      - DB_CONNECTION_URI=postgres://${INFISICAL_DB_USER}:${INFISICAL_DB_PASSWORD}@infisical-db:5432/${INFISICAL_DB_NAME}
       - REDIS_URL=redis://infisical-redis:6379
       - SITE_URL=http://secrets.${DOMAIN}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
@@ -61,12 +59,16 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
+    env_file:
+      - .env
 
 networks:
   home_network:
     external: true
-  infisical_network:
+  home_infisical_network:
+    name: home_infisical_network
     driver: bridge
 
 volumes:
-  infisical_db_data:
+  home_infisical_db_data:
+    name: home_infisical_db_data
