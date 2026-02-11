@@ -82,15 +82,29 @@ down-netdata:
 		--env-file apps/netdata/.env \
 		-f apps/netdata/docker-compose.yml down
 
+.PHONY: up-metabase
+up-metabase: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/metabase/.env \
+		-f apps/metabase/docker-compose.yml up -d
+
+.PHONY: down-metabase
+down-metabase:
+	docker compose \
+		--env-file .env \
+		--env-file apps/metabase/.env \
+		-f apps/metabase/docker-compose.yml down
+
 
 # =============================================================
 # Aggregate Commands
 # =============================================================
 
 .PHONY: up-all
-up-all: up-base up-infisical up-beszel up-netdata
+up-all: up-base up-infisical up-beszel up-netdata up-metabase
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-netdata down-beszel down-infisical down-base
+down-all: down-metabase down-netdata down-beszel down-infisical down-base
 	@echo "All services stopped."

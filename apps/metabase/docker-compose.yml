@@ -1,0 +1,63 @@
+services:
+  metabase-db:
+    image: postgres:16-alpine
+    container_name: metabase_db
+    restart: unless-stopped
+    # PostgreSQL database for Metabase metadata storage.
+    env_file:
+      - .env
+    networks:
+      - home_metabase_network
+    volumes:
+      - home_metabase_db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${METABASE_DB_USER}
+      - POSTGRES_PASSWORD=${METABASE_DB_PASSWORD}
+      - POSTGRES_DB=${METABASE_DB_NAME}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+
+  metabase:
+    image: metabase/metabase:latest
+    container_name: metabase
+    restart: unless-stopped
+    # Metabase is a data analytics and visualization platform.
+    # It provides dashboards, charts, and insights from connected data sources.
+    # This service connects to PostgreSQL for its metadata and to home_network for Traefik routing.
+    depends_on:
+      - metabase-db
+    networks:
+      - home_network
+      - home_metabase_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.metabase.rule=Host(`${METABASE_SUBDOMAIN}.${DOMAIN}`)"
+      - "traefik.http.services.metabase.loadbalancer.server.port=3000"
+      - "traefik.docker.network=home_network"
+    environment:
+      - TZ=${TZ}
+      - MB_DB_TYPE=postgres
+      - MB_DB_DBNAME=${METABASE_DB_NAME}
+      - MB_DB_PORT=5432
+      - MB_DB_USER=${METABASE_DB_USER}
+      - MB_DB_PASS=${METABASE_DB_PASSWORD}
+      - MB_DB_HOST=metabase-db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+    env_file:
+      - .env
+
+networks:
+  home_network:
+    external: true
+  home_metabase_network:
+    name: home_metabase_network
+    driver: bridge
+
+volumes:
+  home_metabase_db_data:
+    name: home_metabase_db_data
