@@ -24,6 +24,28 @@ services:
     env_file:
       - .env
 
+  beszel-agent:
+    image: henrygd/beszel-agent:latest
+    container_name: beszel_agent
+    restart: unless-stopped
+    # The agent uses the Docker socket to read container stats for the hub.
+    networks:
+      - home_beszel_network
+    volumes:
+      - home_beszel_agent_data:/var/lib/beszel-agent
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - LISTEN=${BESZEL_AGENT_LISTEN}
+      - KEY=${BESZEL_AGENT_KEY}
+      - HUB_URL=${BESZEL_AGENT_HUB_URL}
+      - TOKEN=${BESZEL_AGENT_TOKEN}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+    env_file:
+      - .env
+
 networks:
   home_network:
     external: true
@@ -34,3 +56,5 @@ networks:
 volumes:
   home_beszel_data:
     name: home_beszel_data
+  home_beszel_agent_data:
+    name: home_beszel_agent_data
