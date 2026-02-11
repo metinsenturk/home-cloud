@@ -54,15 +54,29 @@ down-infisical:
 		--env-file apps/infisical/.env \
 		-f apps/infisical/docker-compose.yml down
 
+.PHONY: up-beszel
+up-beszel: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/beszel/.env \
+		-f apps/beszel/docker-compose.yml up -d
+
+.PHONY: down-beszel
+down-beszel:
+	docker compose \
+		--env-file .env \
+		--env-file apps/beszel/.env \
+		-f apps/beszel/docker-compose.yml down
+
 
 # =============================================================
 # Aggregate Commands
 # =============================================================
 
 .PHONY: up-all
-up-all: up-base up-infisical
+up-all: up-base up-infisical up-beszel
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-infisical down-base
+down-all: down-beszel down-infisical down-base
 	@echo "All services stopped."

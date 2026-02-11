@@ -1,0 +1,36 @@
+services:
+  beszel:
+    image: henrygd/beszel:latest
+    container_name: beszel
+    restart: unless-stopped
+    # home_network exposes the UI through Traefik; home_beszel_network isolates app traffic.
+    networks:
+      - home_network
+      - home_beszel_network
+    volumes:
+      - home_beszel_data:/beszel_data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.beszel.rule=Host(`beszel.${DOMAIN}`)"
+      - "traefik.http.services.beszel.loadbalancer.server.port=8090"
+    environment:
+      - TZ=${TZ}
+      # APP_URL must match the public URL so redirects and links are correct.
+      - APP_URL=http://${BESZEL_SUBDOMAIN}.${DOMAIN}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+    env_file:
+      - .env
+
+networks:
+  home_network:
+    external: true
+  home_beszel_network:
+    name: home_beszel_network
+    driver: bridge
+
+volumes:
+  home_beszel_data:
+    name: home_beszel_data
