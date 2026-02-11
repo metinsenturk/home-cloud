@@ -50,13 +50,17 @@ networks:
    - Prefer using latest official images when possible. (postgres:latest, redis:latest, etc.)
 4. **README.md:** Create a `README.md` in the service folder with:
    - A brief description of the service.
-   - Any specific configuration instructions (e.g., environment variables, volumes).
-   - Any important notes about configuration or dependencies.
-   - A link to the official documentation for the service (if applicable).
-   - A brief explanation of all services used in the `docker-compose.yml` file and their roles.
-   - The command to start the service:
+   - Only the following sections: Services, Access, Starting this App, Configuration, Environment Variables, Volumes & Networks (if applicable), Official Documentation.
+   - **Services:** List all services defined in the `docker-compose.yml` with a brief description of their role.
+   - **Access:** Provide the URL for accessing the service (e.g., `http://myapp.localhost`).
+   - **Starting this App:** Provide clear instructions on how to start the service, including:
+     * The command to navigate to the app folder (`cd apps/<name>`)
      * From the app folder: `docker compose --env-file ../../.env --env-file .env -f docker-compose.yml up -d`
      * From the root folder: `make up-<name>`
+   - **Configuration:** List any important configuration details, such as setting up environment variables, app specific configurations and settings. 
+   - **Environment Variables:** Make a markdown table listing all environment variables used by their place (local `.env`, global `.env`, or both), by service, default values (if non-sensitive), and a brief description of their purpose.
+   - **Volumes & Networks:** List any volumes or networks defined in the compose file with a brief description of their purpose.
+   - **Official Documentation:** Provide a link to the official documentation for the service (if applicable).
 5. **Makefile Integration:** Add a new target in the root `Makefile` to allow starting this service with `make up-<name>` and `make down-<name>`.
 6. **Environment Variables:** All environment variables should be defined in the root of the service directory in a `.env` file. Do not hardcode sensitive values in the `docker-compose.yml`.
    - **App-Specific `.env`:** Every app folder MUST contain a `.env` and `.env.example` if the compose file requires it.
