@@ -18,8 +18,12 @@ create-network:
 		echo "Network '$(NETWORK_NAME)' created."; \
 	fi
 
+# =============================================================
+# Base Services
+# =============================================================
+
 .PHONY: up-base
-up-base:
+up-base: create-network
 	$(BASE_COMPOSE) up -d
 	@echo "Base services launched."
 
@@ -32,8 +36,12 @@ down-base:
 recreate-base: down-base up-base
 	@echo "Base services recreated."
 
+# =============================================================
+# Apps
+# =============================================================
+
 .PHONY: up-infisical
-up-infisical:
+up-infisical: create-network
 	docker compose \
 		--env-file .env \
 		--env-file apps/infisical/.env \
@@ -45,3 +53,16 @@ down-infisical:
 		--env-file .env \
 		--env-file apps/infisical/.env \
 		-f apps/infisical/docker-compose.yml down
+
+
+# =============================================================
+# Aggregate Commands
+# =============================================================
+
+.PHONY: up-all
+up-all: up-base up-infisical
+	@echo "All services launched."
+
+.PHONY: down-all
+down-all: down-infisical down-base
+	@echo "All services stopped."
