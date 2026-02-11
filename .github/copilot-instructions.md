@@ -26,6 +26,13 @@ When generating a new app in `/apps/<name>/docker-compose.yml`, always follow th
 6. **Ordering:** Follow the strict key order: `image`, `container_name`, `restart`, `command`, `ports`, `networks`, `volumes`, `labels`, `environment`, `logging`, `healthcheck`, `depends_on`, `env_file`.
 7. **Clean Interpolation:** Use `${VARIABLE}` without hardcoded fallbacks for any sensitive data.
 8. **Network Attachment:** Public services must use `home_network`. Internal communication must use `home_<appname>_network`.
+9. **Explicit Naming**: To prevent Docker Compose from adding folder-name prefixes to resources, always use the `name:` attribute for local networks and volumes. See example below.
+```yaml
+networks:
+  home_myapp_network:
+    name: home_myapp_network
+    driver: bridge
+```
 
 # Naming Conventions
 
