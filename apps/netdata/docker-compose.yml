@@ -1,0 +1,33 @@
+services:
+  netdata:
+    image: netdata/netdata:latest
+    container_name: netdata
+    restart: unless-stopped
+    # Netdata provides real-time performance monitoring and resource usage analytics.
+    # It requires access to host filesystem (read-only) to monitor system metrics.
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor=unconfined
+    networks:
+      - home_network
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/etc/os-release:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.netdata.rule=Host(`netdata.${DOMAIN}`)"
+      - "traefik.http.services.netdata.loadbalancer.server.port=19999"
+    environment:
+      - TZ=${TZ}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+    env_file:
+      - .env
+
+networks:
+  home_network:
+    external: true

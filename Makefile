@@ -68,15 +68,29 @@ down-beszel:
 		--env-file apps/beszel/.env \
 		-f apps/beszel/docker-compose.yml down
 
+.PHONY: up-netdata
+up-netdata: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/netdata/.env \
+		-f apps/netdata/docker-compose.yml up -d
+
+.PHONY: down-netdata
+down-netdata:
+	docker compose \
+		--env-file .env \
+		--env-file apps/netdata/.env \
+		-f apps/netdata/docker-compose.yml down
+
 
 # =============================================================
 # Aggregate Commands
 # =============================================================
 
 .PHONY: up-all
-up-all: up-base up-infisical up-beszel
+up-all: up-base up-infisical up-beszel up-netdata
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-beszel down-infisical down-base
+down-all: down-netdata down-beszel down-infisical down-base
 	@echo "All services stopped."
