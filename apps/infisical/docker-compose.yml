@@ -52,7 +52,7 @@ services:
       - "traefik.http.services.infisical.loadbalancer.server.port=8080"
     environment:
       - TZ=${TZ}
-      - DB_CONNECTION_URI=postgres:// ${INFISICAL_DB_USER:-infisical}:${INFISICAL_DB_PASSWORD:-infisical}@infisical-db:5432/${INFISICAL_DB_NAME:-infisical}
+      - DB_CONNECTION_URI=postgres://${INFISICAL_DB_USER:-infisical}:${INFISICAL_DB_PASSWORD:-infisical}@infisical-db:5432/${INFISICAL_DB_NAME:-infisical}
       - REDIS_URL=redis://infisical-redis:6379
       - SITE_URL=http://secrets.${DOMAIN}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
