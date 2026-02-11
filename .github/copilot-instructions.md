@@ -57,13 +57,24 @@ When generating a new app in `/apps/<name>/docker-compose.yml`, always follow th
    - **Variable Source Truth:** The `docker-compose.yml` should only reference variables. If a default is needed for a non-sensitive item, define it in the local `.env` file rather than the YAML.
 
 ## Makefile Integration
-- New services should be added as variables at the top of the root `Makefile`.
-- The `Makefile` loads the root `.env` first, followed by the app-specific `.env`, meaning the app-specific values will override globals.
-- Add a specific `up-<name>` target and include it in the `up-all` target.
-- Add a specific `down-<name>` target and include it in the `down-all` target.
+* **App-Specific Targets:** Every new app must have its own `up-` and `down-` targets.
+* **No Top-Level Variables:** Do not define app paths as variables at the top. Use the direct path within the command.
+* **The "Double-Env" Pattern:** All app targets must explicitly load the root `.env` first, then the local `.env`, meaning the app-specific values will override globals.
+* **Standard Format:**
+```makefile
+.PHONY: up-appname
+up-appname: create-network
+	docker compose --env-file .env --env-file apps/appname/.env -f apps/appname/docker-compose.yml up -d
+
+.PHONY: down-appname
+down-appname:
+	docker compose --env-file .env --env-file apps/appname/.env -f apps/appname/docker-compose.yml down
+
+```
+* **Orchestration:** Add new apps to the `up-all` and `down-all` aggregate targets.
 
 ## Tech Stack Preferences
 - **Logging:** Centralized via Dozzle (`logs.localhost`).
-- **Updates:** Managed by Watchtower (no manual pulls).
+- **Updates:** Managed by What's Up Docker (WUD) (no manual pulls).
 - **Environment:** Use `${TZ}` and `${DOMAIN}` variables.
 - **Constraints:** Always include log-rotation (max-size: 10m) for every service.
