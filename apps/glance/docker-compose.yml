@@ -14,7 +14,7 @@ services:
       - home_glance_data:/app/data
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.glance.rule=Host(`${GLANCE_SUBDOMAIN}.${DOMAIN}`)"
+      - "traefik.http.routers.glance.rule=Host(`${GLANCE_SUBDOMAIN}.${DOMAIN}`) || Host(`${DOMAIN}`)"
       - "traefik.http.services.glance.loadbalancer.server.port=8080"
       - "traefik.docker.network=home_network"
     environment:
