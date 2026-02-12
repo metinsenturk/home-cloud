@@ -3,11 +3,40 @@ server:
   proxied: true
 
 theme:
-  # Note: assets are cached by the browser, changes to the CSS file
-  # will not be reflected until the browser cache is cleared (Ctrl+F5)
   custom-css-file: /assets/user.css
 
 pages:
-  # It's not necessary to create a new file for each page and include it, you can simply
-  # put its contents here, though multiple pages are easier to manage when separated
+  - name: Status
+    columns:
+      - size: full
+        widgets:
+          - type: monitor
+            cache: 1m
+            title: Services
+            sites:
+              - title: Traefik Proxy
+                url: http://traefik.localhost
+                icon: si:traefikproxy
+                allow-insecure: true
+              - title: Infisical Secrets
+                url: http://secrets.localhost
+                icon: si:infisical
+                allow-insecure: true
+              - title: Beszel Monitoring
+                url: http://beszel.localhost
+                icon: si:speedtest
+                allow-insecure: true
+              - title: Dozzle Logs
+                url: http://logs.localhost
+                icon: si:docker
+                allow-insecure: true
+              - title: Metabase
+                url: http://metabase.localhost
+                icon: si:metabase
+                allow-insecure: true                
+
+          - type: docker-containers
+            hide-by-default: false
+
+  # Your existing home dashboard becomes the second page
   - $include: home.yml
