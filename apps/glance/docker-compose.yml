@@ -11,6 +11,7 @@ services:
       # Bind mount the config and assets so edits reload without rebuilding the image.
       - ./config:/app/config:ro
       - ./assets:/app/public/assets:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Required for docker-containers widget
       - home_glance_data:/app/data
     labels:
       - "traefik.enable=true"
