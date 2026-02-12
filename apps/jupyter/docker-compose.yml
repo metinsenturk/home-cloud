@@ -1,0 +1,43 @@
+services:
+  jupyter:
+    # Official Jupyter Stack image with scientific computing tools (SciPy, NumPy, Matplotlib)
+    image: jupyter/scipy-notebook:latest
+    container_name: jupyter
+    restart: unless-stopped
+    networks:
+      - home_network
+      - home_jupyter_network
+    volumes:
+      - home_jupyter_data:/home/jovyan/work
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jupyter.rule=Host(`${JUPYTER_SUBDOMAIN}.${DOMAIN}`)"
+      - "traefik.docker.network=home_network"
+      - "traefik.http.services.jupyter.loadbalancer.server.port=8888"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=${JUPYTER_TOKEN}
+      - TZ=${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/api"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    env_file:
+      - .env
+
+networks:
+  home_network:
+    external: true
+  home_jupyter_network:
+    name: home_jupyter_network
+    driver: bridge
+
+volumes:
+  home_jupyter_data:
+    name: home_jupyter_data

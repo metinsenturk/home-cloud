@@ -110,15 +110,29 @@ down-glance:
 		--env-file apps/glance/.env \
 		-f apps/glance/docker-compose.yml down
 
+.PHONY: up-jupyter
+up-jupyter: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/jupyter/.env \
+		-f apps/jupyter/docker-compose.yml up -d
+
+.PHONY: down-jupyter
+down-jupyter:
+	docker compose \
+		--env-file .env \
+		--env-file apps/jupyter/.env \
+		-f apps/jupyter/docker-compose.yml down
+
 
 # =============================================================
 # Aggregate Commands
 # =============================================================
 
 .PHONY: up-all
-up-all: up-base up-infisical up-beszel up-netdata up-metabase up-glance
+up-all: up-base up-infisical up-beszel up-netdata up-metabase up-glance up-jupyter
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-glance down-metabase down-netdata down-beszel down-infisical down-base
+down-all: down-jupyter down-glance down-metabase down-netdata down-beszel down-infisical down-base
 	@echo "All services stopped."
