@@ -38,7 +38,7 @@ From the root folder:
 ## Volumes & Networks
 
 - **Bind Mounts**:
-  - `./glance.yml:/app/config/glance.yml:ro` (Glance configuration)
+  - `./config:/app/config:ro` (Glance configuration)
   - `./assets:/app/public/assets:ro` (Custom images/icons)
 - **Volumes**:
   - `home_glance_data`: Persistent Glance data

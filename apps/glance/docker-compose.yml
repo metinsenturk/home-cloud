@@ -9,7 +9,7 @@ services:
       - home_glance_network
     volumes:
       # Bind mount the config and assets so edits reload without rebuilding the image.
-      - ./glance.yml:/app/config/glance.yml:ro
+      - ./config:/app/config:ro
       - ./assets:/app/public/assets:ro
       - home_glance_data:/app/data
     labels:
