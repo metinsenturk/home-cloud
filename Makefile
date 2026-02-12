@@ -96,15 +96,29 @@ down-metabase:
 		--env-file apps/metabase/.env \
 		-f apps/metabase/docker-compose.yml down
 
+.PHONY: up-glance
+up-glance: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/glance/.env \
+		-f apps/glance/docker-compose.yml up -d
+
+.PHONY: down-glance
+down-glance:
+	docker compose \
+		--env-file .env \
+		--env-file apps/glance/.env \
+		-f apps/glance/docker-compose.yml down
+
 
 # =============================================================
 # Aggregate Commands
 # =============================================================
 
 .PHONY: up-all
-up-all: up-base up-infisical up-beszel up-netdata up-metabase
+up-all: up-base up-infisical up-beszel up-netdata up-metabase up-glance
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-metabase down-netdata down-beszel down-infisical down-base
+down-all: down-glance down-metabase down-netdata down-beszel down-infisical down-base
 	@echo "All services stopped."

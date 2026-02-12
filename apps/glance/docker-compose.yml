@@ -1,0 +1,44 @@
+services:
+  glance:
+    image: glanceapp/glance:latest
+    container_name: glance
+    restart: unless-stopped
+    # home_network exposes Glance through Traefik; home_glance_network isolates app traffic.
+    networks:
+      - home_network
+      - home_glance_network
+    volumes:
+      # Bind mount the config and assets so edits reload without rebuilding the image.
+      - ./glance.yml:/app/config/glance.yml:ro
+      - ./assets:/app/public/assets:ro
+      - home_glance_data:/app/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.glance.rule=Host(`${GLANCE_SUBDOMAIN}.${DOMAIN}`)"
+      - "traefik.http.services.glance.loadbalancer.server.port=8080"
+      - "traefik.docker.network=home_network"
+    environment:
+      - TZ=${TZ}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ > /dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    env_file:
+      - .env
+
+networks:
+  home_network:
+    external: true
+  home_glance_network:
+    name: home_glance_network
+    driver: bridge
+
+volumes:
+  home_glance_data:
+    name: home_glance_data

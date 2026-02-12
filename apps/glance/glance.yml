@@ -1,0 +1,13 @@
+server:
+  port: ${GLANCE_PORT}
+  proxied: true
+
+pages:
+  - name: Home
+    columns:
+      - size: full
+        widgets:
+          - type: search
+            search-engine: duckduckgo
+          - type: clock
+            hour-format: 24h
