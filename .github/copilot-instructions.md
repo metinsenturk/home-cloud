@@ -35,6 +35,9 @@ networks:
     name: home_myapp_network
     driver: bridge
 ```
+10. **Logging:** Always include log-rotation (max-size: 10m) for every service. Json logging is preferred for better integration with Dozzle.
+11. **Healthchecks:** Always include a healthcheck for each service to allow Traefik to detect unhealthy containers and avoid routing to them. Use the `interval`, `timeout`, `retries`, and `start_period` options to fine-tune the healthcheck behavior.
+12. **Documentation:** Include comments in the `docker-compose.yml` explaining the purpose of each setting, especially for non-obvious configurations.
 
 # Naming Conventions
 
@@ -53,12 +56,19 @@ networks:
    - Only the following sections: Services, Access, Starting this App, Configuration, Environment Variables, Volumes & Networks (if applicable), Official Documentation.
    - **Services:** List all services defined in the `docker-compose.yml` with a brief description of their role.
    - **Access:** Provide the URL for accessing the service (e.g., `http://myapp.localhost`).
-   - **Starting this App:** Provide clear instructions on how to start the service, including:
-     * The command to navigate to the app folder (`cd apps/<name>`)
-     * From the app folder: `docker compose --env-file ../../.env --env-file .env -f docker-compose.yml up -d`
-     * From the root folder: `make up-<name>`
-   - **Configuration:** List any important configuration details, such as setting up environment variables, app specific configurations and settings. 
-   - **Environment Variables:** Make a markdown table listing all environment variables used by their place (local `.env`, global `.env`, or both), by service, default values (if non-sensitive), and a brief description of their purpose.
+   - **Starting this App:** Provide clear instructions on how to start the service in two ways, from app folder and from root:
+      * From the app folder: `cd apps/<name>` and `docker compose --env-file ../../.env --env-file .env -f docker-compose.yml up -d`
+      * From the root folder: `make up-<name>`
+   - **Configuration:** Make a list of any important configuration steps or dependencies.
+      * Any environment variables that need to be set in the local `.env`
+      * Any app specific setup steps
+      * Do not include any instructions that are not specific to this app (e.g., "make sure Traefik is running", "make sure `home_network` exists" is not needed if it's already in the root README).
+   - **Environment Variables:** Create a table with the following columns listing all environment variables used:
+      * Variable Name
+      * Source (e.g., `.env`, `.env.example`): Values are Local, Global and Both. Local means the variable is only defined in the app's `.env`. Global means it's only defined in the root `.env`. Both means it must be defined in both (with the local taking precedence).
+      * Service (which service uses this variable)
+      * Default/Example Value (if applicable, but do not hardcode secrets)
+      * Description (what this variable is for)
    - **Volumes & Networks:** List any volumes or networks defined in the compose file with a brief description of their purpose.
    - **Official Documentation:** Provide a link to the official documentation for the service (if applicable).
 5. **Makefile Integration:** Add a new target in the root `Makefile` to allow starting this service with `make up-<name>` and `make down-<name>`.
