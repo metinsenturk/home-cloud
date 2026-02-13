@@ -1,0 +1,36 @@
+services:
+  marimo:
+    image: ghcr.io/marimo-team/marimo:latest-sql
+    container_name: marimo
+    restart: unless-stopped
+    networks:
+      - home_network
+    volumes:
+      - home_marimo_data:/home/marimo/.marimo
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.marimo.rule=Host(`marimo.${DOMAIN}`)"
+      - "traefik.http.services.marimo.loadbalancer.server.port=8080"
+      - "traefik.docker.network=home_network"
+    environment:
+      - TZ=${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 1s bash -c ':> /dev/tcp/127.0.0.1/8080' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    command: marimo edit --no-token -p 8080 --host 0.0.0.0
+
+networks:
+  home_network:
+    external: true
+
+volumes:
+  home_marimo_data:
+    name: home_marimo_data
+    driver: local

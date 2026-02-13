@@ -124,15 +124,29 @@ down-jupyter:
 		--env-file apps/jupyter/.env \
 		-f apps/jupyter/docker-compose.yml down
 
+.PHONY: up-marimo
+up-marimo: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/marimo/.env \
+		-f apps/marimo/docker-compose.yml up -d
+
+.PHONY: down-marimo
+down-marimo:
+	docker compose \
+		--env-file .env \
+		--env-file apps/marimo/.env \
+		-f apps/marimo/docker-compose.yml down
+
 
 # =============================================================
 # Aggregate Commands
 # =============================================================
 
 .PHONY: up-all
-up-all: up-base up-infisical up-beszel up-netdata up-metabase up-glance up-jupyter
+up-all: up-base up-infisical up-beszel up-netdata up-metabase up-glance up-jupyter up-marimo
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-jupyter down-glance down-metabase down-netdata down-beszel down-infisical down-base
+down-all: down-marimo down-jupyter down-glance down-metabase down-netdata down-beszel down-infisical down-base
 	@echo "All services stopped."
