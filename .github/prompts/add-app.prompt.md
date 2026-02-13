@@ -95,3 +95,5 @@ Follow the pattern of this `glance` service:
 - **The `.env` / `.env.example` Split:** * **`.env`**: Must be created in the app folder with **working default values** for non-sensitive items (like `DB_NAME` or `DB_USER`) and actual secrets for your local environment.
     * **`.env.example`**: Must be created with **placeholders** (e.g., `PASSWORD=your_password_here`) to serve as a template.
 - **Variable Source Truth:** The `docker-compose.yml` should only reference variables. If a default is needed for a non-sensitive item, define it in the local `.env` file rather than the YAML.
+- **Global Exclusion:** Do NOT include global variables (e.g., `TZ`, `DOMAIN`, `PUID`, `PGID`) in the app-specific `.env` or `.env.example` files. These are inherited from the root `.env` via the Makefile.
+- **App-Specific Only:** Only define variables that are unique to this application (e.g., `DB_PASSWORD`, `API_KEY`, `APP_SETTINGS`).

@@ -32,7 +32,9 @@ When generating a new app in `/apps/<name>/docker-compose.yml`, always follow th
 5. Avoid using version key in `docker-compose.yml` (use the latest syntax).
 6. Avoid hardcoding ports in the compose file; rely on Traefik for routing.
 7. **Ordering:** Follow the strict key order: `image`, `container_name`, `restart`, `networks`, `volumes`, `labels`, `environment`, `logging`, `healthcheck`, `depends_on`, `env_file`.
-8. **Clean Interpolation:** Use `${VARIABLE}` without hardcoded fallbacks for any sensitive data. Define defaults in the local `.env` file instead. This keeps the `docker-compose.yml` clean and secure.
+8. **Clean Interpolation:** Use `${VARIABLE}` without hardcoded fallbacks. 
+   - **Inheritance:** Assume global variables like `TZ` and `DOMAIN` are already available from the root `.env`. Do not duplicate them into app-specific environment files.
+   - **Local Defaults:** Define app-specific defaults in the local `/apps/<name>/.env` file.
 9. **Network Attachment:** Public services must use `home_network`. Internal communication must use `home_<appname>_network`.
 10. **Explicit Naming**: To prevent Docker Compose from adding folder-name prefixes to resources, always use the `name:` attribute for local networks and volumes. See example below.
 ```yaml
