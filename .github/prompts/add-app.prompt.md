@@ -10,12 +10,18 @@ Before generating any files, you MUST perform a web search using `@github #web` 
 3. The services that need to be defined in the `docker-compose.yml` (e.g., app, database, cache).
 4. The best healthcheck endpoint (e.g., /health, /api/v1/status, or a simple TCP check).
 5. Network Binding: Determine if the app defaults to localhost and identify the CLI flag needed to bind it to 0.0.0.0 (e.g., --host 0.0.0.0 or -H 0.0.0.0).
+6. Service Classification: Determine if the app is a Web Service (needs Traefik labels) or Infrastructure (e.g., a DB, needs infra- prefix and traefik.enable=false).
+7. Database Tools: If the image is a database, find the official CLI-based healthcheck (e.g., pg_isready for Postgres, mysqladmin ping for MySQL) to avoid curl dependencies.
 
-# Step 2: User Confirmation
+# Step 2: User Confirmation and Proposal
 Present a "Proposal" to the user and WAIT for their approval. Do not generate code yet.
 Include:
 - **Docker Image:** (e.g., `metabase:latest`)
 - **Service Types and Names:** (e.g., `metabase` for the app, `metabase-db` for the database)
+- **Namespace Classification:** (Web Service or Infrastructure)
+- **Naming Convention:** (e.g., "Service name will be `myapp` and container name will be `myapp` to follow the standard pattern.")
+- **Network Strategy:** (e.g., "Will be placed on home_network for global access" or "Private bridge only").
+- **Host Access:** (e.g., "Port 5432 will be mapped to host for external GUI access").
 
 # Step 3: Implementation (After Approval)
 Once approved, follow the **Standard Docker Compose Pattern** in `copilot-instructions.md`:

@@ -12,6 +12,17 @@ The project uses a "Base + App" folder strategy to allow launching subsets of se
 - **Documentation:** Every service MUST include clear comments explaining WHY a setting is used.
 - **Workflow:** ALWAYS provide a high-level plan or "Action List" before providing code.
 
+## Infrastructure & Shared Services Pattern
+- **Service Naming (Dashes):** Use `infra-` prefix with dashes (e.g., e.g., `infra-postgres`, `infra-mssql`). This acts as the internal DNS hostname.
+- **Folder Naming (Underscores):** Use `infra_` prefix with underscores (e.g., `infra_postgres`, `infra_mssql`).
+- **Container Naming (Underscores):** Use `infra_` prefix with underscores (e.g., `infra_postgres`, `infra_mssql`).
+- **Persistence & Networking (Underscores):** Strictly follow these patterns:
+    - Network: `home_infra_<name>_network`
+    - Volume: `home_infra_<name>_data`
+- **Connectivity:** - Always attach to `home_network` for cross-app discovery.
+    - Set `traefik.enable=false` (Infrastructure is accessed via Service Name, not URLs).
+- **Global Variables:** Inherit `TZ` and `DOMAIN` from the root `.env`. Do not duplicate them in app-local `.env` files.
+
 ## Service Lifecycle & Discovery
 - **New Service Protocol:** Every new application is treated as a modular "plug-in" to the existing Mini-Cloud. It must be research-validated (images, ports, entrypoints) before code generation.
 - **Task-Specific Execution:** Detailed scaffolding of new apps is handled via the `/add-app` prompt. Always refer to `.github/prompts/add-app.prompt.md` for the multi-step research and confirmation workflow.
@@ -49,6 +60,7 @@ networks:
 
 # Naming Conventions
 
+- **Folder Names:** Use lowercase letters and underscores. If the app name is multiple words, use underscores (e.g., `myapp`, `my_app`).
 - **Service Names:** Use lowercase letters and hyphens (e.g., `myapp`). If multiple services are needed, use `<appname>-<purpose>` (e.g., `myapp-db`).
 - **Container Names:** Follow the pattern `<appname>` (e.g., `myapp`). If multiple containers are needed, use `<appname>_<purpose>` (e.g., `myapp_db`).
 - **Network Names:** Use `home_<appname>_network` for internal networks (e.g., `home_myapp_network`).
