@@ -138,15 +138,29 @@ down-marimo:
 		--env-file apps/marimo/.env \
 		-f apps/marimo/docker-compose.yml down
 
+.PHONY: up-pgadmin
+up-pgadmin: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/pgadmin/.env \
+		-f apps/pgadmin/docker-compose.yml up -d
+
+.PHONY: down-pgadmin
+down-pgadmin:
+	docker compose \
+		--env-file .env \
+		--env-file apps/pgadmin/.env \
+		-f apps/pgadmin/docker-compose.yml down
+
 
 # =============================================================
 # Aggregate Commands
 # =============================================================
 
 .PHONY: up-all
-up-all: up-base up-infisical up-beszel up-netdata up-metabase up-glance up-jupyter up-marimo
+up-all: up-base up-infisical up-beszel up-netdata up-metabase up-glance up-jupyter up-marimo up-pgadmin
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-marimo down-jupyter down-glance down-metabase down-netdata down-beszel down-infisical down-base
+down-all: down-pgadmin down-marimo down-jupyter down-glance down-metabase down-netdata down-beszel down-infisical down-base
 	@echo "All services stopped."
