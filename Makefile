@@ -152,15 +152,29 @@ down-pgadmin:
 		--env-file apps/pgadmin/.env \
 		-f apps/pgadmin/docker-compose.yml down
 
+.PHONY: up-pgbackweb
+up-pgbackweb: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/pgbackweb/.env \
+		-f apps/pgbackweb/docker-compose.yml up -d
+
+.PHONY: down-pgbackweb
+down-pgbackweb:
+	docker compose \
+		--env-file .env \
+		--env-file apps/pgbackweb/.env \
+		-f apps/pgbackweb/docker-compose.yml down
+
 
 # =============================================================
 # Aggregate Commands
 # =============================================================
 
 .PHONY: up-all
-up-all: up-base up-infisical up-beszel up-netdata up-metabase up-glance up-jupyter up-marimo up-pgadmin
+up-all: up-base up-infisical up-beszel up-netdata up-metabase up-glance up-jupyter up-marimo up-pgadmin up-pgbackweb
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-pgadmin down-marimo down-jupyter down-glance down-metabase down-netdata down-beszel down-infisical down-base
+down-all: down-pgbackweb down-pgadmin down-marimo down-jupyter down-glance down-metabase down-netdata down-beszel down-infisical down-base
 	@echo "All services stopped."
