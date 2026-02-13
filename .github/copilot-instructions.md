@@ -88,6 +88,18 @@ down-appname:
 ```
 * **Orchestration:** Add new apps to the `up-all` and `down-all` aggregate targets.
 
+## Port Registry (PORTS.md)
+- **Purpose:** A centralized log of all host-accessible ports to prevent conflicts.
+- **Central Registry:** All ports exposed to the host MUST be documented in `/PORTS.md`.
+- **Content:** Includes the host port, the service name, the internal container port, and a brief description.
+- **Update Rule:** When adding a new host-exposed port, append a single row to the existing table in `/PORTS.md`. Do not rewrite the file or add extra commentary.
+- **Structure:** 
+   - `# Host Ports`: Brief description of the file's purpose.
+   - `## Ports Table`: A Markdown table with columns: `Host Port`, `Service Name`, `Internal Port`, `Description`.
+   - `## Notes`: A list of specific operational notes referencing the table entries.
+- **Mapping Style:** Prefer consistent mapping (e.g., `5432:5432`) unless a conflict exists on the host.
+- **Conflict Prevention:** Before assigning a host port to a new service, check `/PORTS.md` to ensure it is not already in use.
+
 ## Tech Stack Preferences
 - **Logging:** Centralized via Dozzle (`logs.localhost`).
 - **Updates:** Managed by What's Up Docker (WUD) (no manual pulls).

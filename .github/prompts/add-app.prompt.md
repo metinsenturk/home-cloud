@@ -32,6 +32,9 @@ Once approved, follow the **Standard Docker Compose Pattern** in `copilot-instru
 5. **README.md:** Create `apps/<app_name>/README.md` with the required sections.
 5. **Root Makefile:** Update the root `Makefile` with `up-` and `down-` targets.
 6. Always use `traefik.docker.network=home_network` label to prevent 504 errors. If the service is connected to multiple networks, this label is mandatory.
+7. **Update PORTS.md:** If the app exposes a port to the host (e.g., ports: ["5432:5432"]), you MUST update the PORTS.md file in the root directory with the new port assignment, service name, and description.
+  - Action: Only add a new entry (one row) to the table and, if necessary, a bullet point in the Notes section.
+  - Format consistency is crucial. Follow guidelines in the copilot-instructions.md for how to format the table and notes.
 
 ### 1. Mandatory Service Structure
 Every service MUST follow this exact key order. Do not skip or reorder:
