@@ -12,6 +12,12 @@ The project uses a "Base + App" folder strategy to allow launching subsets of se
 - **Documentation:** Every service MUST include clear comments explaining WHY a setting is used.
 - **Workflow:** ALWAYS provide a high-level plan or "Action List" before providing code.
 
+## Service Lifecycle & Discovery
+- **New Service Protocol:** Every new application is treated as a modular "plug-in" to the existing Mini-Cloud. It must be research-validated (images, ports, entrypoints) before code generation.
+- **Task-Specific Execution:** Detailed scaffolding of new apps is handled via the `/add-app` prompt. Always refer to `.github/prompts/add-app.prompt.md` for the multi-step research and confirmation workflow.
+- **Binding Rule:** Services must never listen on `127.0.0.1` inside the container; they must bind to `0.0.0.0` to ensure the Traefik proxy on the `home_network` can reach them.
+- **Connectivity Check:** If a service has multiple networks, the Traefik routing label MUST explicitly specify `traefik.docker.network=home_network` to prevent 504 Gateway Timeouts.
+
 ## Standard Docker Compose Pattern
 When generating a new app in `/apps/<name>/docker-compose.yml`, always follow this template:
 
