@@ -26,7 +26,7 @@ services:
       options:
         max-size: "10m"
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:19999/api/v1/info || exit 1"]
+      test: ["CMD", "netdatacli", "ping"]
       interval: 30s
       timeout: 5s
       retries: 3
