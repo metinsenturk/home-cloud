@@ -36,7 +36,30 @@ if ! load_config; then
     exit 1
 fi
 
-# 3. Define and Deploy
-AW_URL="https://github.com/Microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2022.bak"
+# 3. Define Databases to Deploy
+# Format: ["DatabaseName"]="URL"
+declare -A DATABASES
+DATABASES=(
+    ["AdventureWorks"]="https://github.com/Microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2022.bak"
+    ["AdventureWorksDW"]="https://github.com/Microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorksDW2022.bak"
+    ["WideWorldImporters"]="https://github.com/Microsoft/sql-server-samples/releases/download/wide-world-importers-v1.0/WideWorldImporters-Standard.bak"
+)
 
-deploy_sample_db "$AW_URL" "AdventureWorks"
+echo "Starting bulk deployment of ${#DATABASES[@]} databases..."
+
+# 4. Loop through the associative array
+for DB_NAME in "${!DATABASES[@]}"; do
+    URL="${DATABASES[$DB_NAME]}"
+    
+    # Step A: Clean up any old instance for testing
+    remove_db "$DB_NAME"
+    
+    # Step B: Run the master deployment orchestrator
+    if ! deploy_sample_db "$URL" "$DB_NAME"; then
+        echo "Skipping to next database due to failure in $DB_NAME."
+    fi
+done
+
+echo "==================================================="
+echo "ALL DEPLOYMENTS COMPLETED"
+echo "==================================================="
