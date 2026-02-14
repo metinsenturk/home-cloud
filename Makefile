@@ -166,15 +166,29 @@ down-pgbackweb:
 		--env-file apps/pgbackweb/.env \
 		-f apps/pgbackweb/docker-compose.yml down
 
+.PHONY: up-infra-postgres
+up-infra-postgres: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/infra_postgres/.env \
+		-f apps/infra_postgres/docker-compose.yml up -d
+
+.PHONY: down-infra-postgres
+down-infra-postgres:
+	docker compose \
+		--env-file .env \
+		--env-file apps/infra_postgres/.env \
+		-f apps/infra_postgres/docker-compose.yml down
+
 
 # =============================================================
 # Aggregate Commands
 # =============================================================
 
 .PHONY: up-all
-up-all: up-base up-infisical up-beszel up-netdata up-metabase up-glance up-jupyter up-marimo up-pgadmin up-pgbackweb
+up-all: up-base up-infra-postgres up-infisical up-beszel up-netdata up-metabase up-glance up-jupyter up-marimo up-pgadmin up-pgbackweb
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-pgbackweb down-pgadmin down-marimo down-jupyter down-glance down-metabase down-netdata down-beszel down-infisical down-base
+down-all: down-pgbackweb down-pgadmin down-marimo down-jupyter down-glance down-metabase down-netdata down-beszel down-infisical down-infra-postgres down-base
 	@echo "All services stopped."
