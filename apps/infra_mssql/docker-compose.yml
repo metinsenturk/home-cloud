@@ -1,0 +1,38 @@
+services:
+  infra-mssql:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: infra_mssql
+    restart: unless-stopped
+    networks:
+      - home_network
+    # Expose SQL Server for host-based admin tools and local clients.
+    ports:
+      - "1433:1433"
+    volumes:
+      - home_infra_mssql_data:/var/opt/mssql
+    # Infra service is accessed by service name, not routed by Traefik.
+    labels:
+      - "traefik.enable=false"
+    environment:
+      - ACCEPT_EULA=${ACCEPT_EULA}
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
+      - MSSQL_PID=${MSSQL_PID}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      # Use sqlcmd to confirm the engine is accepting connections.
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"${MSSQL_SA_PASSWORD}\" -Q \"SELECT 1\" -No"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+networks:
+  home_network:
+    external: true
+
+volumes:
+  home_infra_mssql_data:
+    name: home_infra_mssql_data
