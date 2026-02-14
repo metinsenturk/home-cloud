@@ -14,7 +14,7 @@
 #
 # Requirements:
 #   1. A running SQL Server Docker container.
-#   2. A .env file in the same directory containing: MSSQL_SA_PASSWORD=your_password
+#   2. A .env file in the parent directory containing: MSSQL_SA_PASSWORD=your_password
 #   3. Tools installed on host: curl, docker, awk.
 #
 # Usage:
@@ -65,7 +65,8 @@ SQLCMD_PATH="/opt/mssql-tools18/bin/sqlcmd" # Updated path
 load_config() {
     # Get the directory where the script lives
     local script_dir=$(dirname "$(readlink -f "$0")")
-    local env_path="$script_dir/.env"
+    # Move up one level to the parent directory
+    local env_path="$script_dir/../.env"
 
     if [ -f "$env_path" ]; then
         # Load the variables into the current shell session
