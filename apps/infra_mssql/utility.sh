@@ -220,6 +220,30 @@ check_db_status() {
     fi
 }
 
+# Function: validate_file_size
+# Purpose: Ensures a file exists and meets a minimum size requirement.
+# Usage: validate_file_size "/path/to/file" 1000000 (size in bytes)
+validate_file_size() {
+    local file_path=$1
+    local min_size=$2
+
+    if [ ! -f "$file_path" ]; then
+        echo "ERROR: File $file_path does not exist."
+        return 1
+    fi
+
+    local actual_size=$(stat -c%s "$file_path")
+
+    if [ "$actual_size" -lt "$min_size" ]; then
+        echo "ERROR: File size check failed!"
+        echo "Expected at least: $min_size bytes"
+        echo "Actual size:     $actual_size bytes"
+        return 1
+    fi
+
+    return 0
+}
+
 # Function: download_sample
 # Purpose: Downloads a .bak file from a URL to the host machine.
 # Usage: download_sample "https://example.com/sample.bak" "/path/to/save/sample.bak"
