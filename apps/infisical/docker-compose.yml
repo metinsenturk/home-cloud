@@ -18,6 +18,12 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "$$POSTGRES_USER", "-d", "$$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
   infisical-redis:
     image: redis:7-alpine
@@ -30,6 +36,12 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
 
   infisical:
     image: infisical/infisical:latest
@@ -39,8 +51,10 @@ services:
     # Requires PostgreSQL and Redis for operation.
     # This is the public-facing service that connects to home_network for Traefik routing.
     depends_on:
-      - infisical-db
-      - infisical-redis
+      infisical-db:
+        condition: service_healthy
+      infisical-redis:
+        condition: service_healthy
     networks:
       - home_network
       - home_infisical_network
@@ -60,6 +74,12 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     env_file:
       - .env
 

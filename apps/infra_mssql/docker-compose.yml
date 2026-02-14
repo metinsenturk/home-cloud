@@ -23,11 +23,11 @@ services:
         max-size: "10m"
     healthcheck:
       # Use sqlcmd to confirm the engine is accepting connections.
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"${MSSQL_SA_PASSWORD}\" -Q \"SELECT 1\" -No"]
-      interval: 30s
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $$MSSQL_SA_PASSWORD -Q 'SELECT 1' -C"]
+      interval: 15s
       timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 90s
 
 networks:
   home_network:

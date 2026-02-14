@@ -12,6 +12,8 @@ services:
       - --entrypoints.websecure.address=:443
       - --log.level=INFO
       - --api.dashboard=true
+      # - --api.insecure=true
+      - --ping=true
     ports:
       - "80:80"
       - "443:443"
@@ -32,6 +34,12 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   dozzle:
     image: amir20/dozzle:latest
@@ -53,6 +61,12 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
+    healthcheck:
+      test: ["CMD", "/dozzle", "healthcheck"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
   wud:
     image: getwud/wud:latest
@@ -74,6 +88,12 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000').then(r => r.ok ? process.exit(0) : process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 networks:
   home_network:

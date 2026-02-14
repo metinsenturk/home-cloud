@@ -18,6 +18,12 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "$$POSTGRES_USER", "-d", "$$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
   metabase:
     image: metabase/metabase:latest
@@ -27,7 +33,8 @@ services:
     # It provides dashboards, charts, and insights from connected data sources.
     # This service connects to PostgreSQL for its metadata and to home_network for Traefik routing.
     depends_on:
-      - metabase-db
+      metabase-db:
+        condition: service_healthy
     networks:
       - home_network
       - home_metabase_network
@@ -48,6 +55,12 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
     env_file:
       - .env
 
