@@ -245,22 +245,43 @@ validate_file_size() {
 }
 
 # Function: download_sample
-# Purpose: Downloads a .bak file from a URL to the host machine.
+# Purpose: Downloads a .bak file from a URL to the host machine, ensuring it's valid.
 # Usage: download_sample "https://example.com/sample.bak" "/path/to/save/sample.bak"
 download_sample() {
     local url=$1
     local destination=$2
+    local min_expected_size=1000000 # 1MB
 
-    echo "--- Downloading sample database ---"
-    echo "Source: $url"
-    echo "Destination: $destination"
+    echo "--- Checking for sample database ---"
 
+    # 1. Check if the file already exists locally
+    if [ -f "$destination" ]; then
+        echo "File already exists at $destination. Validating size..."
+        
+        # 2. If it exists, make sure it's actually a valid file (not a 9-byte error)
+        if validate_file_size "$destination" "$min_expected_size"; then
+            echo "Existing file is valid. Skipping download."
+            return 0
+        else
+            echo "Existing file is invalid/too small. Re-downloading..."
+            rm "$destination"
+        fi
+    fi
+
+    echo "Downloading from: $url"
+    
+    # 3. Perform the download if the file wasn't found or was invalid
     # -L: Follow redirects (important for GitHub/Microsoft links)
+    # -f: Fail silently on server errors (4xx, 5xx) instead of saving an error page
     # -o: Save to specific filename
-    # --create-dirs: Create local folder if it doesn't exist
-    if curl -L "$url" -o "$destination" --create-dirs; then
-        echo "SUCCESS: File downloaded to $destination"
-        return 0
+    # --create-dirs: Create local folder if it doesn't exist    
+    if curl -Lf "$url" -o "$destination" --create-dirs; then
+        if validate_file_size "$destination" "$min_expected_size"; then
+            echo "SUCCESS: File downloaded and validated."
+            return 0
+        else
+            return 1
+        fi
     else
         echo "ERROR: Download failed. Check your internet connection or URL."
         return 1
