@@ -124,12 +124,9 @@ restore_db() {
     # We extract logical names because the internal file paths in the .bak 
     # are Windows paths (C:\...) and will fail on Linux without 'WITH MOVE'.    
     # We use -h-1 to remove headers and -W to remove extra whitespace
-    # awk: '{print $1}' gets the first column which contains the logical names
-    # The output will be something like:
-    # LogicalName1
-    # LogicalName2
-    # this variable will contain both names separated by a space, we will split it later
-    local logical_names=$(
+    # We filter by the second column ($2): "D" for Data and "L" for Log.
+    # This prevents the script from accidentally picking up dashed lines (---).
+    local logical_data=$(
         docker exec -i "$CONTAINER_NAME" \
             /opt/mssql-tools/bin/sqlcmd \
             -S localhost \
@@ -138,13 +135,20 @@ restore_db() {
             -h-1 \
             -W \
             -Q "$discovery_query" \
-        | awk '{print $1}'
+        | awk '$2=="D" {print $1}'
     )
 
-    # We expect two logical names: one for the data file and one for the log file.
-    # awk 'NR==1' gets the first line (data file), and 'NR==2' gets the second line (log file).
-    local logical_data=$(echo $logical_names | awk 'NR==1')
-    local logical_log=$(echo $logical_names | awk 'NR==2')
+    local logical_log=$(
+        docker exec -i "$CONTAINER_NAME" \
+            /opt/mssql-tools/bin/sqlcmd \
+            -S localhost \
+            -U sa \
+            -P "$MSSQL_SA_PASSWORD" \
+            -h-1 \
+            -W \
+            -Q "$discovery_query" \
+        | awk '$2=="L" {print $1}'
+    )
 
     if [ -z "$logical_data" ] || [ -z "$logical_log" ]; then
         echo "Error: Could not retrieve logical names from $bak_filename"
