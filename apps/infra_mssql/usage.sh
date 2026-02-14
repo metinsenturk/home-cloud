@@ -37,6 +37,6 @@ if ! load_config; then
 fi
 
 # 3. Define and Deploy
-AW_URL="https://github.com/Microsoft/sql-server-samples/releases/download/adventure-works/AdventureWorks2022.bak"
+AW_URL="https://github.com/Microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2022.bak"
 
 deploy_sample_db "$AW_URL" "AdventureWorks"
