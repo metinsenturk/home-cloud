@@ -9,7 +9,7 @@
 #
 # Prerequisite:
 #   - Ensure 'utility.sh' is in the same directory.
-#   - Ensure '.env' contains 'SA_PASSWORD'.
+#   - Ensure '.env' contains 'MSSQL_SA_PASSWORD'.
 #
 # Execution:
 #   Run this script directly from the terminal:

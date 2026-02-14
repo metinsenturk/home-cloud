@@ -14,7 +14,7 @@
 #
 # Requirements:
 #   1. A running SQL Server Docker container.
-#   2. A .env file in the same directory containing: SA_PASSWORD=your_password
+#   2. A .env file in the same directory containing: MSSQL_SA_PASSWORD=your_password
 #   3. Tools installed on host: curl, docker, awk.
 #
 # Usage:
@@ -24,7 +24,7 @@
 #     deploy_sample_db "https://url-to-bak/file.bak" "TargetDBName"
 #
 # Functions:
-#   - load_config:      Sources .env and validates SA_PASSWORD.
+#   - load_config:      Sources .env and validates MSSQL_SA_PASSWORD.
 #   - download_sample:  Downloads .bak file from a URL to the host.
 #   - transfer_file:    Copies .bak from host to container and sets permissions.
 #   - restore_db:       Restores DB using 'WITH MOVE' to map internal Linux paths.
@@ -73,8 +73,8 @@ load_config() {
     fi
 
     # Check if the specific variable we need exists
-    if [ -z "$SA_PASSWORD" ]; then
-        echo "ERROR: SA_PASSWORD is not defined in $env_path"
+    if [ -z "$MSSQL_SA_PASSWORD" ]; then
+        echo "ERROR: MSSQL_SA_PASSWORD is not defined in $env_path"
         return 1
     fi
 
@@ -134,7 +134,7 @@ restore_db() {
             /opt/mssql-tools/bin/sqlcmd \
             -S localhost \
             -U sa \
-            -P "$SA_PASSWORD" \
+            -P "$MSSQL_SA_PASSWORD" \
             -h-1 \
             -W \
             -Q "$discovery_query" \
@@ -174,7 +174,7 @@ restore_db() {
         /opt/mssql-tools/bin/sqlcmd \
         -S localhost \
         -U sa \
-        -P "$SA_PASSWORD" \
+        -P "$MSSQL_SA_PASSWORD" \
         -Q "$sql_query"
 }
 
@@ -200,7 +200,7 @@ check_db_status() {
             /opt/mssql-tools/bin/sqlcmd \
             -S localhost \
             -U sa \
-            -P "$SA_PASSWORD" \
+            -P "$MSSQL_SA_PASSWORD" \
             -h-1 -W \
             -Q "$status_query" \
         | awk '{print $1}'
