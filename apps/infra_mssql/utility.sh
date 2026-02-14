@@ -106,6 +106,18 @@ transfer_file() {
     docker exec -u root $CONTAINER_NAME chown mssql:root "$MSSQL_BACKUP_DIR/$filename"
 }
 
+# Function: get_logical_name
+# Purpose: Extracts the logical name of the data or log file from RESTORE FILELIST
+# Usage: get_logical_name "D" "output_of_filelistonly_command"
+get_logical_name() {
+    local type=$1   # "D" for Data, "L" for Log
+    local output=$2
+    
+    # We scan every field for the type indicator (D/L) because Windows 
+    # physical paths often contain spaces, which shifts awk's column numbering.
+    echo "$output" | grep '^[[:alnum:]]' | awk -v t="$type" '{for(i=1;i<=NF;i++) if($i==t) {print $1; exit}}'
+}
+
 # Function: restore_db
 # Purpose: Restores the DB and moves the internal files to the persistent data volume.
 # Usage: restore_db "DatabaseName" "backupfile.bak"
@@ -123,14 +135,12 @@ restore_db() {
         FROM DISK = '$bak_path';
     "
 
-    # 1. Get Logical File Names
+    # 2. Fetch the raw table once to save time (Multiline format)
     # We extract logical names because the internal file paths in the .bak 
     # are Windows paths (C:\...) and will fail on Linux without 'WITH MOVE'.    
     # We use -h-1 to remove headers and -W to remove extra whitespace
-    # We iterate through all fields to find "D" or "L" (Type indicator).
-    # This is necessary because the PhysicalName path contains spaces,
-    # causing awk to split it into multiple fields.
-    local logical_data=$(
+    # -C: Trust the server certificate (important for encrypted connections, but generally safe in a local Docker environment)
+    local raw_filelist=$(
         docker exec -i "$CONTAINER_NAME" \
             "$SQLCMD_PATH" \
             -S localhost \
@@ -139,22 +149,12 @@ restore_db() {
             -C \
             -h-1 \
             -W \
-            -Q "$discovery_query" \
-        | grep '^[[:alnum:]]' | awk '{for(i=1;i<=NF;i++) if($i=="D") {print $1; exit}}' | head -n 1
+            -Q "$discovery_query"
     )
 
-    local logical_log=$(
-        docker exec -i "$CONTAINER_NAME" \
-            "$SQLCMD_PATH" \
-            -S localhost \
-            -U sa \
-            -P "$MSSQL_SA_PASSWORD" \
-            -C \
-            -h-1 \
-            -W \
-            -Q "RESTORE FILELISTONLY FROM DISK = '$bak_path';" \
-        | grep '^[[:alnum:]]' | awk '{for(i=1;i<=NF;i++) if($i=="L") {print $1; exit}}' | head -n 1
-    )
+    # 3. Extract names using the helper function
+    local logical_data=$(get_logical_name "D" "$raw_filelist")
+    local logical_log=$(get_logical_name "L" "$raw_filelist")
 
     if [ -z "$logical_data" ] || [ -z "$logical_log" ]; then
         echo "Error: Could not retrieve logical names from $bak_filename"
@@ -188,6 +188,38 @@ restore_db() {
         -P "$MSSQL_SA_PASSWORD" \
         -C \
         -Q "$sql_query"
+}
+
+# Function: remove_db
+# Purpose: Forcibly drops a database if it exists.
+# Usage: remove_db "AdventureWorks"
+remove_db() {
+    local db_name=$1
+
+    echo "--- Removing existing database: $db_name ---"
+
+    # We use SINGLE_USER WITH ROLLBACK IMMEDIATE to kick off any active 
+    # connections so the database can be dropped without being 'in use'.
+    local drop_query="
+        IF EXISTS (SELECT name FROM sys.databases WHERE name = '$db_name')
+        BEGIN
+            ALTER DATABASE [$db_name] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+            DROP DATABASE [$db_name];
+            PRINT 'Database $db_name dropped successfully.';
+        END
+        ELSE
+        BEGIN
+            PRINT 'Database $db_name does not exist. Skipping.';
+        END
+    "
+
+    docker exec -i "$CONTAINER_NAME" \
+        "$SQLCMD_PATH" \
+        -S localhost \
+        -U sa \
+        -P "$MSSQL_SA_PASSWORD" \
+        -C \
+        -Q "$drop_query"
 }
 
 # Function: check_db_status
