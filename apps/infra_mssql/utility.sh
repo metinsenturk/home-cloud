@@ -107,15 +107,14 @@ transfer_file() {
 }
 
 # Function: get_logical_name
-# Purpose: Extracts the logical name of the data or log file from RESTORE FILELIST
-# Usage: get_logical_name "D" "output_of_filelistonly_command"
-get_logical_name() {
-    local type=$1   # "D" for Data, "L" for Log
+# Purpose: Extracts the logical names of the data or log files from RESTORE FILELIST
+# Usage: get_logical_names "D" "output_of_filelistonly_command"
+get_logical_names() {
+    local type=$1   # "D" or "L"
     local output=$2
     
-    # We scan every field for the type indicator (D/L) because Windows 
-    # physical paths often contain spaces, which shifts awk's column numbering.
-    echo "$output" | grep '^[[:alnum:]]' | awk -v t="$type" '{for(i=1;i<=NF;i++) if($i==t) {print $1; exit}}'
+    # We remove 'exit' so it finds ALL files of this type (e.g. secondary data files)
+    echo "$output" | grep '^[[:alnum:]]' | awk -v t="$type" '{for(i=1;i<=NF;i++) if($i==t) {print $1}}'
 }
 
 # Function: restore_db
@@ -153,27 +152,34 @@ restore_db() {
     )
 
     # 3. Extract names using the helper function
-    local logical_data=$(get_logical_name "D" "$raw_filelist")
-    local logical_log=$(get_logical_name "L" "$raw_filelist")
+    local data_names=$(get_logical_names "D" "$raw_filelist")
+    local log_names=$(get_logical_names "L" "$raw_filelist")
 
-    if [ -z "$logical_data" ] || [ -z "$logical_log" ]; then
+    if [ -z "$data_names" ] || [ -z "$log_names" ]; then
         echo "Error: Could not retrieve logical names from $bak_filename"
-        echo "DEBUG: Data: '$logical_data', Log: '$logical_log'"
         return 1
     fi
 
-    # 2. Define the T-SQL Command in a clean, multiline format
-    # This maps the internal logical files to the Linux file system paths
-    # REPLACE: Overwrites if the DB already exists
-    # STATS=5: Shows progress every 5%   
+    # Build the MOVE statements dynamically
+    local move_statements=""
+    
+    # Process all Data files
+    for logical_name in $data_names; do
+        move_statements+=", MOVE '$logical_name' TO '$MSSQL_DATA_DIR/${db_name}_${logical_name}.mdf'"
+    done
+
+    # Process all Log files
+    for logical_name in $log_names; do
+        move_statements+=", MOVE '$logical_name' TO '$MSSQL_DATA_DIR/${db_name}_${logical_name}.ldf'"
+    done
+
+    # Remove the leading comma and space from the first MOVE
+    move_statements="${move_statements#, }"
+
     local sql_query="
         RESTORE DATABASE [$db_name] 
         FROM DISK = '$bak_path' 
-        WITH 
-            MOVE '$logical_data' TO '$MSSQL_DATA_DIR/$db_name.mdf', 
-            MOVE '$logical_log' TO '$MSSQL_DATA_DIR/${db_name}_log.ldf', 
-            REPLACE, 
-            STATS = 5;
+        WITH $move_statements, REPLACE, STATS = 5;
     "
 
     echo "--- Executing Restore ---"
