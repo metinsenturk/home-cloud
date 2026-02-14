@@ -1,0 +1,38 @@
+# Sample Data Files for AWK Testing
+# The test-awk.sh script creates these files automatically in /tmp
+# This file documents the structure for reference
+
+## sample.csv
+Name,Age,Salary,Department
+John,28,50000,Engineering
+Jane,32,65000,Marketing
+Bob,45,75000,Engineering
+Alice,29,55000,Sales
+Charlie,38,68000,Marketing
+Diana,41,72000,Engineering
+
+## sample.log
+2026-02-14 10:23:45 INFO Server started successfully
+2026-02-14 10:24:12 ERROR Connection timeout - database unreachable
+2026-02-14 10:24:30 WARN High memory usage detected: 85%
+2026-02-14 10:25:01 INFO User logged in: john@example.com
+2026-02-14 10:25:15 ERROR Failed to process payment: insufficient funds
+2026-02-14 10:26:00 INFO Backup completed successfully
+2026-02-14 10:27:30 ERROR API rate limit exceeded
+
+## sample.txt
+Product001 Apple 150 Fruits
+Product002 Laptop 850 Electronics
+Product003 Banana 80 Fruits
+Product004 Mouse 25 Electronics
+Product005 Orange 120 Fruits
+Product006 Keyboard 65 Electronics
+
+## numbers.txt
+15
+42
+8
+73
+29
+51
+12
