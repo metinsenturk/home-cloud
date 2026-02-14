@@ -8,7 +8,7 @@
 #   databases (AdventureWorks, etc.) into a SQL Server 2025 Docker container.
 #
 # Infrastructure:
-#   - Container:    sql_server_2025
+#   - Container:    infra_mssql
 #   - Data Volume:  Maps to /var/opt/mssql/data
 #   - Backup Temp:  Maps to /var/opt/mssql/backup (created if missing)
 #
@@ -53,6 +53,9 @@ MSSQL_DATA_DIR="/var/opt/mssql/data"
 # If this path is not explicitly mapped to a volume, files here 
 # will be lost if the container is deleted (but the DB will stay in /data).
 MSSQL_BACKUP_DIR="/var/opt/mssql/backup"
+
+# Updated path to sqlcmd for SQL Server 2025 image
+SQLCMD_PATH="/opt/mssql-tools18/bin/sqlcmd" # Updated path
 
 # --- UTILITY FUNCTIONS ---
 
@@ -128,30 +131,33 @@ restore_db() {
     # This prevents the script from accidentally picking up dashed lines (---).
     local logical_data=$(
         docker exec -i "$CONTAINER_NAME" \
-            /opt/mssql-tools/bin/sqlcmd \
+            "$SQLCMD_PATH" \
             -S localhost \
             -U sa \
             -P "$MSSQL_SA_PASSWORD" \
+            -C \
             -h-1 \
             -W \
             -Q "$discovery_query" \
-        | awk '$2=="D" {print $1}'
+        | grep '^[[:alnum:]]' | awk '$2=="D" {print $1}' | head -n 1
     )
 
     local logical_log=$(
         docker exec -i "$CONTAINER_NAME" \
-            /opt/mssql-tools/bin/sqlcmd \
+            "$SQLCMD_PATH" \
             -S localhost \
             -U sa \
             -P "$MSSQL_SA_PASSWORD" \
+            -C \
             -h-1 \
             -W \
-            -Q "$discovery_query" \
-        | awk '$2=="L" {print $1}'
+            -Q "RESTORE FILELISTONLY FROM DISK = '$bak_path';" \
+        | grep '^[[:alnum:]]' | awk '$2=="L" {print $1}' | head -n 1
     )
 
     if [ -z "$logical_data" ] || [ -z "$logical_log" ]; then
         echo "Error: Could not retrieve logical names from $bak_filename"
+        echo "DEBUG: Data: '$logical_data', Log: '$logical_log'"
         return 1
     fi
 
@@ -175,10 +181,11 @@ restore_db() {
     # 3. Run the command
     # We use -Q to execute the query and exit
     docker exec -i "$CONTAINER_NAME" \
-        /opt/mssql-tools/bin/sqlcmd \
+        "$SQLCMD_PATH" \
         -S localhost \
         -U sa \
         -P "$MSSQL_SA_PASSWORD" \
+        -C \
         -Q "$sql_query"
 }
 
@@ -201,10 +208,11 @@ check_db_status() {
     # 2. Execute and capture result
     local status=$(
         docker exec -i "$CONTAINER_NAME" \
-            /opt/mssql-tools/bin/sqlcmd \
+            "$SQLCMD_PATH" \
             -S localhost \
             -U sa \
             -P "$MSSQL_SA_PASSWORD" \
+            -C \
             -h-1 -W \
             -Q "$status_query" \
         | awk '{print $1}'
