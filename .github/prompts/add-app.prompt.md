@@ -12,6 +12,7 @@ Before generating any files, you MUST perform a web search using `@github #web` 
 5. Network Binding: Determine if the app defaults to localhost and identify the CLI flag needed to bind it to 0.0.0.0 (e.g., --host 0.0.0.0 or -H 0.0.0.0).
 6. Service Classification: Determine if the app is a Web Service (needs Traefik labels) or Infrastructure (e.g., a DB, needs infra- prefix and traefik.enable=false).
 7. Database Tools: If the image is a database, find the official CLI-based healthcheck (e.g., pg_isready for Postgres, mysqladmin ping for MySQL) to avoid curl dependencies.
+8. Curl/Wget Verification: If the app is a web service, check if the official image includes curl. If not, propose using the app's runtime (e.g., node -e ... or python3 -c ...) or a TCP check as the healthcheck test.
 
 # Step 2: User Confirmation and Proposal
 Present a "Proposal" to the user and WAIT for their approval. Do not generate code yet.

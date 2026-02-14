@@ -58,6 +58,16 @@ networks:
 12. **Healthchecks:** Always include a healthcheck for each service to allow Traefik to detect unhealthy containers and avoid routing to them. Use the `interval`, `timeout`, `retries`, and `start_period` options to fine-tune the healthcheck behavior.
 13. **Documentation:** Include comments in the `docker-compose.yml` explaining the purpose of each setting, especially for non-obvious configurations. Comments about global architectural decisions (`home_network`, Traefik labels, Global environment variables, etc.) should be included in the root README rather than individual compose files to avoid redundancy.
 
+## Healthcheck Standards
+- **Native Tools First:** Always prefer built-in binary utilities over `curl` or `wget`.
+    - **PostgreSQL:** Use `pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB`.
+    - **MSSQL:** Use `/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $$SA_PASSWORD -Q "SELECT 1" -C`.
+    - **Redis:** Use `redis-cli ping`.
+    - **MySQL/MariaDB:** Use `mysqladmin ping -h localhost -u $$MYSQL_USER -p$$MYSQL_PASSWORD`.
+- **Fallback to Shell Built-ins:** If no native tool or `curl` is available, use TCP socket checks:
+    - `test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/<port> || exit 1"]`
+- **Configuration:** Always include `start_period` to allow for initialization (especially for databases).
+
 # Naming Conventions
 
 - **Folder Names:** Use lowercase letters and underscores. If the app name is multiple words, use underscores (e.g., `myapp`, `my_app`).
