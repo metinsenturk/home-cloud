@@ -127,8 +127,9 @@ restore_db() {
     # We extract logical names because the internal file paths in the .bak 
     # are Windows paths (C:\...) and will fail on Linux without 'WITH MOVE'.    
     # We use -h-1 to remove headers and -W to remove extra whitespace
-    # We filter by the second column ($2): "D" for Data and "L" for Log.
-    # This prevents the script from accidentally picking up dashed lines (---).
+    # We iterate through all fields to find "D" or "L" (Type indicator).
+    # This is necessary because the PhysicalName path contains spaces,
+    # causing awk to split it into multiple fields.
     local logical_data=$(
         docker exec -i "$CONTAINER_NAME" \
             "$SQLCMD_PATH" \
@@ -139,7 +140,7 @@ restore_db() {
             -h-1 \
             -W \
             -Q "$discovery_query" \
-        | grep '^[[:alnum:]]' | awk '$2=="D" {print $1}' | head -n 1
+        | grep '^[[:alnum:]]' | awk '{for(i=1;i<=NF;i++) if($i=="D") {print $1; exit}}' | head -n 1
     )
 
     local logical_log=$(
@@ -152,7 +153,7 @@ restore_db() {
             -h-1 \
             -W \
             -Q "RESTORE FILELISTONLY FROM DISK = '$bak_path';" \
-        | grep '^[[:alnum:]]' | awk '$2=="L" {print $1}' | head -n 1
+        | grep '^[[:alnum:]]' | awk '{for(i=1;i<=NF;i++) if($i=="L") {print $1; exit}}' | head -n 1
     )
 
     if [ -z "$logical_data" ] || [ -z "$logical_log" ]; then
@@ -206,6 +207,7 @@ check_db_status() {
     "
 
     # 2. Execute and capture result
+    # Filter to get only the status value (skip empty lines and "(N rows affected)")
     local status=$(
         docker exec -i "$CONTAINER_NAME" \
             "$SQLCMD_PATH" \
@@ -215,7 +217,7 @@ check_db_status() {
             -C \
             -h-1 -W \
             -Q "$status_query" \
-        | awk '{print $1}'
+        | grep -E '^[A-Z]' | head -n 1 | awk '{print $1}'
     )
 
     # 3. Logic Check
