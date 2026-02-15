@@ -222,15 +222,29 @@ down-mage:
 		--env-file apps/mage/.env \
 		-f apps/mage/docker-compose.yml down
 
+.PHONY: up-memos
+up-memos: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/memos/.env \
+		-f apps/memos/docker-compose.yml up -d
+
+.PHONY: down-memos
+down-memos:
+	docker compose \
+		--env-file .env \
+		--env-file apps/memos/.env \
+		-f apps/memos/docker-compose.yml down
+
 
 # =============================================================
 # Aggregate Commands
 # =============================================================
 
 .PHONY: up-all
-up-all: up-base up-infra-postgres up-infra-mssql up-infisical up-beszel up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-pgadmin up-pgbackweb
+up-all: up-base up-infra-postgres up-infra-mssql up-infisical up-beszel up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-pgadmin up-pgbackweb
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-pgbackweb down-pgadmin down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-beszel down-infisical down-infra-mssql down-infra-postgres down-base
+down-all: down-pgbackweb down-pgadmin down-memos down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-beszel down-infisical down-infra-mssql down-infra-postgres down-base
 	@echo "All services stopped."
