@@ -93,6 +93,65 @@ Docker Compose automatically loads variables from a `.env` file in the compose f
 1. **Compose file interpolation** — Variables referenced in the compose file (e.g., `${DB_HOST}`)
 2. **Default environment for services** — Variables not explicitly overridden by `environment:` or `env_file:`
 
+### Implicit vs Explicit `env_file` Behavior
+
+There is a crucial distinction between the automatic `.env` loading and explicitly declaring `env_file:`
+
+**Automatic `.env` Loading (Implicit):**
+```yaml
+services:
+  myapp:
+    environment:
+      - VAR1=value1
+```
+
+When `.env` exists but is NOT explicitly declared:
+- Variables in `.env` are loaded by Compose during parsing
+- Only variables referenced in the compose file (interpolation) or in `environment:` key are visible in the container
+- Other variables in `.env` are NOT injected into the container
+- Example: If `.env` contains `DEBUG=true` but it's not in `environment:` key, the container does NOT see `DEBUG`
+
+**Explicit `env_file` Declaration:**
+```yaml
+services:
+  myapp:
+    env_file:
+      - .env
+    environment:
+      - VAR1=value1
+```
+
+When you explicitly declare `env_file:`:
+- **ALL variables** from the specified file are injected directly into the container
+- Variables do NOT need to be listed in the `environment:` key
+- The container automatically receives every `KEY=VALUE` pair from the file
+- Example: If `.env` contains `DEBUG=true`, it's automatically available in the container even if not in `environment:`
+
+**Practical Difference:**
+
+Given `.env` with:
+```
+DEBUG=true
+LOG_LEVEL=info
+API_KEY=secret
+```
+
+*Without explicit `env_file:`*
+```yaml
+environment:
+  - VAR1=value1
+```
+Container sees: `VAR1=value1` only. `DEBUG`, `LOG_LEVEL`, `API_KEY` are NOT in container.
+
+*With explicit `env_file:`*
+```yaml
+env_file:
+  - .env
+environment:
+  - VAR1=value1
+```
+Container sees: `VAR1=value1`, `DEBUG=true`, `LOG_LEVEL=info`, `API_KEY=secret` — all variables from `.env`.
+
 ## Variable Interpolation in Compose Files
 
 The `.env` file enables dynamic composition. Variables referenced in the compose file are substituted at parse time.
@@ -155,22 +214,33 @@ services:
 - `FROM_ENV=from_env` (from compose file)
 - Host `VAR=host_value` is NOT used (overridden by all above)
 
-## Double-Env Pattern (Advanced)
+## Layered Configuration Pattern (Advanced)
 
-For modular applications, load variables in layers to allow overrides:
+For modular applications, load variables in multiple layers to support overrides and defaults:
 
 ```bash
 docker compose \
   --env-file .env \
-  --env-file apps/myapp/.env \
-  -f apps/myapp/docker-compose.yml up -d
+  --env-file app.env \
+  -f docker-compose.yml up -d
 ```
 
 **Behavior:**
-- `.env` is loaded first (global defaults)
-- `apps/myapp/.env` is loaded second (app-specific overrides)
-- Variables in the second file override the first
-- `environment:` key in compose still has highest priority
+- First file (e.g., `.env`) is loaded with global/common defaults
+- Second file (e.g., `app.env`) is loaded next, overriding the first
+- Variables in the second file take precedence over the first
+- `environment:` key in compose file still has the highest priority
+- Allows flexibility: global constants at root level, application-specific overrides in subdirectories
+
+**Example Directory Structure:**
+```
+.
+├── .gitignore
+└── app/
+    ├── .env                # loads automatically
+    ├── .app.env            # app-specific overrides
+    └── docker-compose.yml
+```
 
 ## Sensitive Variables (Secrets vs Environment)
 
