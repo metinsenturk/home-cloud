@@ -1,0 +1,41 @@
+services:
+  mage:
+    # Official Mage.ai image for building and managing data pipelines
+    image: mageai/mageai:latest
+    container_name: mage
+    restart: unless-stopped
+    networks:
+      - home_network
+    volumes:
+      - home_mage_data:/home/src/mage_data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mage.rule=Host(`mage.${DOMAIN}`)"
+      - "traefik.http.services.mage.loadbalancer.server.port=6789"
+      - "traefik.docker.network=home_network"
+    environment:
+      - PROJECT_NAME=${PROJECT_NAME}
+      - HOST=${HOST}
+      - PORT=${PORT}
+      - TZ=${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6789/api/statuses || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    env_file:
+      - .env
+
+networks:
+  home_network:
+    external: true
+
+volumes:
+  home_mage_data:
+    name: home_mage_data
+    driver: local
