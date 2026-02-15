@@ -1,11 +1,40 @@
 services:
+  mage-db:
+    image: postgres:alpine
+    container_name: mage_db
+    restart: unless-stopped
+    networks:
+      - home_mage_network
+    volumes:
+      - home_mage_db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${MAGE_DB_USER}
+      - POSTGRES_PASSWORD=${MAGE_DB_PASSWORD}
+      - POSTGRES_DB=${MAGE_DB_NAME}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "$$POSTGRES_USER", "-d", "$$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    env_file:
+      - .env
+
   mage:
     # Official Mage.ai image for building and managing data pipelines
     image: mageai/mageai:latest
     container_name: mage
     restart: unless-stopped
+    depends_on:
+      mage-db:
+        condition: service_healthy
     networks:
       - home_network
+      - home_mage_network
     volumes:
       - home_mage_data:/home/src/mage_data
     labels:
@@ -17,7 +46,12 @@ services:
       - PROJECT_NAME=${PROJECT_NAME}
       - HOST=${HOST}
       - PORT=${PORT}
+      - MAGE_DATABASE_CONNECTION_URL=postgresql://${MAGE_DB_USER}:${MAGE_DB_PASSWORD}@mage-db:5432/${MAGE_DB_NAME}
       - TZ=${TZ}
+      - REQUIRE_USER_AUTHENTICATION=1
+      - DEFAULT_OWNER_EMAIL=${HOME_CLOUD_EMAIL}
+      - DEFAULT_OWNER_PASSWORD=${HOME_CLOUD_PASSWORD}
+      - DEFAULT_OWNER_USERNAME=${HOME_CLOUD_USERNAME}
     logging:
       driver: json-file
       options:
@@ -34,8 +68,14 @@ services:
 networks:
   home_network:
     external: true
+  home_mage_network:
+    name: home_mage_network
+    driver: bridge
 
 volumes:
   home_mage_data:
     name: home_mage_data
+    driver: local
+  home_mage_db_data:
+    name: home_mage_db_data
     driver: local
