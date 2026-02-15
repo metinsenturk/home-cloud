@@ -110,6 +110,11 @@ down-appname:
 - **Mapping Style:** Prefer consistent mapping (e.g., `5432:5432`) unless a conflict exists on the host.
 - **Conflict Prevention:** Before assigning a host port to a new service, check `/PORTS.md` to ensure it is not already in use.
 
+## Environment Variable Interpolation
+- **Host-Level ($):** Use a single dollar sign for values that Docker Compose must resolve from `.env` files at startup (e.g., image tags, volume paths, or `environment:` definitions).
+- **Container-Level ($$):** Use a double dollar sign for variables that must be evaluated by the container's shell at runtime. 
+    - **MANDATORY:** Always use `$$` in `healthcheck` commands (e.g., `$$POSTGRES_USER`) to ensure the container uses its own internal environment.
+
 ## Tech Stack Preferences
 - **Logging:** Centralized via Dozzle (`logs.localhost`).
 - **Updates:** Managed by What's Up Docker (WUD) (no manual pulls).

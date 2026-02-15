@@ -23,6 +23,7 @@ Include:
 - **Naming Convention:** (e.g., "Service name will be `myapp` and container name will be `myapp` to follow the standard pattern.")
 - **Network Strategy:** (e.g., "Will be placed on home_network for global access" or "Private bridge only").
 - **Host Access:** (e.g., "Port 5432 will be mapped to host for external GUI access").
+- **Healthcheck Syntax:** Verify that all variables within the healthcheck block use the $$ escape sequence to prevent host-side interpolation errors.
 
 # Step 3: Implementation (After Approval)
 Once approved, follow the **Standard Docker Compose Pattern** in `copilot-instructions.md`:
