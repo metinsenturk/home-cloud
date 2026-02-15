@@ -28,6 +28,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    # Pass the token to command to ensure Jupyter starts with given token
+    command: start-notebook.py --NotebookApp.token=${JUPYTER_TOKEN} --NotebookApp.password=${JUPYTER_TOKEN}
     env_file:
       - .env
 
