@@ -96,6 +96,20 @@ down-metabase:
 		--env-file apps/metabase/.env \
 		-f apps/metabase/docker-compose.yml down
 
+.PHONY: up-nocodb
+up-nocodb: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/nocodb/.env \
+		-f apps/nocodb/docker-compose.yml up -d
+
+.PHONY: down-nocodb
+down-nocodb:
+	docker compose \
+		--env-file .env \
+		--env-file apps/nocodb/.env \
+		-f apps/nocodb/docker-compose.yml down
+
 .PHONY: up-glance
 up-glance: create-network
 	docker compose \
@@ -200,9 +214,9 @@ down-infra-mssql:
 # =============================================================
 
 .PHONY: up-all
-up-all: up-base up-infra-postgres up-infra-mssql up-infisical up-beszel up-netdata up-metabase up-glance up-jupyter up-marimo up-pgadmin up-pgbackweb
+up-all: up-base up-infra-postgres up-infra-mssql up-infisical up-beszel up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-pgadmin up-pgbackweb
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-pgbackweb down-pgadmin down-marimo down-jupyter down-glance down-metabase down-netdata down-beszel down-infisical down-infra-mssql down-infra-postgres down-base
+down-all: down-pgbackweb down-pgadmin down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-beszel down-infisical down-infra-mssql down-infra-postgres down-base
 	@echo "All services stopped."
