@@ -75,6 +75,7 @@ networks:
 - **Container Names:** Follow the pattern `<appname>` (e.g., `myapp`). If multiple containers are needed, use `<appname>_<purpose>` (e.g., `myapp_db`).
 - **Network Names:** Use `home_<appname>_network` for internal networks (e.g., `home_myapp_network`).
 - **Volume Names:** Use `home_<appname>_data` for persistent storage (e.g., `home_myapp_data`). If multiple volumes are needed, use `home_<appname>_<purpose>` (e.g., `home_myapp_db_data`).
+- **Env Variables:** Use uppercase letters with underscores (e.g., `MYAPP_ENV_VAR`). For global variables, use a clear prefix (e.g., `HOME_CLOUD_` for global credentials, `INFRA_` for infrastructure secrets).
 
 # Coding Style
 
@@ -114,6 +115,22 @@ down-appname:
 - **Host-Level ($):** Use a single dollar sign for values that Docker Compose must resolve from `.env` files at startup (e.g., image tags, volume paths, or `environment:` definitions).
 - **Container-Level ($$):** Use a double dollar sign for variables that must be evaluated by the container's shell at runtime. 
     - **MANDATORY:** Always use `$$` in `healthcheck` commands (e.g., `$$POSTGRES_USER`) to ensure the container uses its own internal environment.
+
+## Global Environment Dictionary
+- **Standardization:** All global variables are defined in the root `.env` and documented in the root `.env.example`.
+- **Use of Global Variables:** Apps should reference global variables (e.g., `${DOMAIN}`, `${TZ}`, `${HOME_CLOUD_EMAIL}`) rather than defining their own versions in local `.env` files.
+- **Inheritance:** Apps inherit these via the Makefile's "Double-Env" pattern.
+- **Variables:** The full list is defined in the root `.env.example`. Some key variables include:
+    - `DOMAIN`, `TZ`, `PUID`, `PGID`
+    - `HOME_CLOUD_EMAIL`, `HOME_CLOUD_PASSWORD`
+    - `INFRA_POSTGRES_PASSWORD`, `OPENAI_API_KEY`, etc.
+
+## Secret Management
+- **Global Secrets:** Store in root `.env` for shared services (e.g., `INFRA_POSTGRES_PASSWORD`).
+- **App Secrets:** Store in `apps/<name>/.env` for unique, service-specific credentials.
+- **Reference Pattern:** Compose files should use variable substitution (e.g., `${SECRET_VAR}`) rather than hardcoded strings.
+- **Priority:** The Makefile loads root `.env` then app `.env`. App-local values ALWAYS take priority over globals.
+- **Usage:** Services must use global secrets defined in the root `.env` for any variables that are shared across multiple apps (e.g., database passwords). App-specific secrets should only be defined in the local `.env` if they are unique to that app.
 
 ## Tech Stack Preferences
 - **Logging:** Centralized via Dozzle (`logs.localhost`).

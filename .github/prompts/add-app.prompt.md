@@ -13,6 +13,9 @@ Before generating any files, you MUST perform a web search using `@github #web` 
 6. Service Classification: Determine if the app is a Web Service (needs Traefik labels) or Infrastructure (e.g., a DB, needs infra- prefix and traefik.enable=false).
 7. Database Tools: If the image is a database, find the official CLI-based healthcheck (e.g., pg_isready for Postgres, mysqladmin ping for MySQL) to avoid curl dependencies.
 8. Curl/Wget Verification: If the app is a web service, check if the official image includes curl. If not, propose using the app's runtime (e.g., node -e ... or python3 -c ...) or a TCP check as the healthcheck test.
+9. Global Variable Mapping: Compare the app's required environment variables against the Global Environment Dictionary in copilot-instructions.md.
+  - Rule: If the app requires an email, use ${HOME_CLOUD_EMAIL}. If it requires an admin password, use ${HOME_CLOUD_PASSWORD}.
+  - Logic: Only propose NEW variables in the app-local .env if a suitable global one does not exist.
 
 # Step 2: User Confirmation and Proposal
 Present a "Proposal" to the user and WAIT for their approval. Do not generate code yet.
@@ -24,6 +27,7 @@ Include:
 - **Network Strategy:** (e.g., "Will be placed on home_network for global access" or "Private bridge only").
 - **Host Access:** (e.g., "Port 5432 will be mapped to host for external GUI access").
 - **Healthcheck Syntax:** Verify that all variables within the healthcheck block use the $$ escape sequence to prevent host-side interpolation errors.
+- **Environment Mapping:** Explicitly state which global variables are being reused (e.g., "Mapping PGADMIN_DEFAULT_EMAIL to global ${HOME_CLOUD_EMAIL}").
 
 # Step 3: Implementation (After Approval)
 Once approved, follow the **Standard Docker Compose Pattern** in `copilot-instructions.md`:
