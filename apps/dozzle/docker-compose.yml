@@ -1,0 +1,32 @@
+services:
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    restart: unless-stopped
+    # Dozzle provides a simple web UI for viewing Docker container logs in real-time.
+    # It requires access to the Docker socket to read logs from all containers.
+    networks:
+      - home_network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dozzle.rule=Host(`logs.${DOMAIN}`)"
+      - "traefik.http.services.dozzle.loadbalancer.server.port=8080"
+      - "traefik.docker.network=home_network"
+    environment:
+      - TZ=${TZ}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "/dozzle", "healthcheck"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+networks:
+  home_network:
+    external: true

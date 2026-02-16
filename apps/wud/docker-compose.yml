@@ -1,0 +1,32 @@
+services:
+  wud:
+    image: getwud/wud:latest
+    container_name: wud
+    restart: unless-stopped
+    # What's Up Docker (WUD) monitors Docker images for updates and provides a web UI.
+    # It requires access to the Docker socket to watch containers and check for updates.
+    networks:
+      - home_network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wud.rule=Host(`updates.${DOMAIN}`)"
+      - "traefik.http.services.wud.loadbalancer.server.port=3000"
+      - "traefik.docker.network=home_network"
+    environment:
+      - TZ=${TZ}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000').then(r => r.ok ? process.exit(0) : process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  home_network:
+    external: true

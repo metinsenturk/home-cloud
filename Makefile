@@ -2,12 +2,10 @@
 
 # Usage:
 #   make create-network   # Creates the home_network if it doesn't exist
-
-#   make up-base         # Launches base services (Traefik, etc.)
+#   make up-base         # Launches base services (Traefik, Dozzle, WUD)
+#   make up-all          # Launches all services
 
 NETWORK_NAME=home_network
-
-BASE_COMPOSE=docker compose --env-file .env -f base/docker-compose.yml
 
 .PHONY: create-network
 create-network:
@@ -19,17 +17,51 @@ create-network:
 	fi
 
 # =============================================================
-# Base Services
+# Base Services (Traefik, Dozzle, WUD)
 # =============================================================
 
+.PHONY: up-traefik
+up-traefik: create-network
+	docker compose \
+		--env-file .env \
+		-f apps/traefik/docker-compose.yml up -d
+
+.PHONY: down-traefik
+down-traefik:
+	docker compose \
+		--env-file .env \
+		-f apps/traefik/docker-compose.yml down
+
+.PHONY: up-dozzle
+up-dozzle: create-network
+	docker compose \
+		--env-file .env \
+		-f apps/dozzle/docker-compose.yml up -d
+
+.PHONY: down-dozzle
+down-dozzle:
+	docker compose \
+		--env-file .env \
+		-f apps/dozzle/docker-compose.yml down
+
+.PHONY: up-wud
+up-wud: create-network
+	docker compose \
+		--env-file .env \
+		-f apps/wud/docker-compose.yml up -d
+
+.PHONY: down-wud
+down-wud:
+	docker compose \
+		--env-file .env \
+		-f apps/wud/docker-compose.yml down
+
 .PHONY: up-base
-up-base: create-network
-	$(BASE_COMPOSE) up -d
+up-base: up-traefik up-dozzle up-wud
 	@echo "Base services launched."
 
 .PHONY: down-base
-down-base:
-	$(BASE_COMPOSE) down
+down-base: down-dozzle down-wud down-traefik
 	@echo "Base services stopped."
 
 .PHONY: recreate-base
@@ -242,9 +274,9 @@ down-memos:
 # =============================================================
 
 .PHONY: up-all
-up-all: up-base up-infra-postgres up-infra-mssql up-infisical up-beszel up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-pgadmin up-pgbackweb
+up-all: up-traefik up-dozzle up-wud up-infra-postgres up-infra-mssql up-infisical up-beszel up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-pgadmin up-pgbackweb
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-pgbackweb down-pgadmin down-memos down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-beszel down-infisical down-infra-mssql down-infra-postgres down-base
+down-all: down-pgbackweb down-pgadmin down-memos down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-beszel down-infisical down-infra-mssql down-infra-postgres down-wud down-dozzle down-traefik
 	@echo "All services stopped."
