@@ -1,9 +1,10 @@
 # Essential Makefile for Self-Hosted Modular Infrastructure
 
 # Usage:
-#   make create-network   # Creates the home_network if it doesn't exist
-#   make up-base         # Launches base services (Traefik, Dozzle, WUD)
-#   make up-all          # Launches all services
+#   make create-network              # Creates the home_network if it doesn't exist
+#   make check-validity APP=app_name # Validates a compose file for an app
+#   make up-base                     # Launches base services (Traefik, Dozzle, WUD)
+#   make up-all                      # Launches all services
 
 NETWORK_NAME=home_network
 
@@ -15,6 +16,25 @@ create-network:
 		docker network create $(NETWORK_NAME); \
 		echo "Network '$(NETWORK_NAME)' created."; \
 	fi
+
+# =============================================================
+# Utilities
+# =============================================================
+
+.PHONY: check-validity
+check-validity:
+	@if [ -z "$(APP)" ]; then \
+		echo "Usage: make check-validity APP=app_name"; \
+		echo "Example: make check-validity APP=traefik"; \
+		exit 1; \
+	fi
+	@if [ ! -f "apps/$(APP)/docker-compose.yml" ]; then \
+		echo "✗ Error: apps/$(APP)/docker-compose.yml not found"; \
+		exit 1; \
+	fi
+	@docker compose -f apps/$(APP)/docker-compose.yml config > /dev/null 2>&1 && \
+		echo "✓ $(APP) compose file is valid" || \
+		(echo "✗ $(APP) compose file is invalid" && exit 1)
 
 # =============================================================
 # Base Services (Traefik, Dozzle, WUD)
