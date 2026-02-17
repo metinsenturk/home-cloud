@@ -1,0 +1,36 @@
+services:
+  infra-mongodb:
+    image: mongo:latest
+    container_name: infra_mongodb
+    restart: unless-stopped
+    networks:
+      - home_network
+    ports:
+      - "27017:27017"
+    volumes:
+      - home_infra_mongodb_data:/data/db
+    labels:
+      - "traefik.enable=false"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - TZ=${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    command: --bind_ip 0.0.0.0
+
+networks:
+  home_network:
+    external: true
+
+volumes:
+  home_infra_mongodb_data:
+    name: home_infra_mongodb_data
