@@ -13,6 +13,8 @@ services:
       - home_gitlab_data:/var/opt/gitlab
       - home_gitlab_config:/etc/gitlab
       - home_gitlab_logs:/var/log/gitlab
+      # Mounts your local config file over the container's default
+      - ./gitlab.rb:/etc/gitlab/gitlab.rb:ro      
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.gitlab.rule=Host(`${GITLAB_SUBDOMAIN}.${DOMAIN}`)"
@@ -22,7 +24,9 @@ services:
       - TZ=${TZ}
       - GITLAB_ROOT_EMAIL=${HOME_CLOUD_EMAIL}
       - GITLAB_ROOT_PASSWORD=${HOME_CLOUD_PASSWORD}
-      - GITLAB_OMNIBUS_CONFIG=${GITLAB_OMNIBUS_CONFIG}
+      # Configuration is managed via mounted gitlab.rb file instead of env variable
+      # Alternative: Use GITLAB_OMNIBUS_CONFIG for inline configuration
+      # - GITLAB_OMNIBUS_CONFIG=${GITLAB_OMNIBUS_CONFIG}
     logging:
       driver: "json-file"
       options:

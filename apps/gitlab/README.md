@@ -26,9 +26,20 @@ make up-gitlab
 
 ## Configuration
 
-- `GITLAB_OMNIBUS_CONFIG` sets `external_url` and the advertised SSH port.
+### Configuration File
+
+GitLab is configured using the mounted `gitlab.rb` file instead of the `GITLAB_OMNIBUS_CONFIG` environment variable. This approach provides:
+- Better readability and organization of settings
+- Easier version control and documentation
+- Ability to use multi-line configurations with inline comments
+
+**Note**: GitLab configuration can also be managed via the `GITLAB_OMNIBUS_CONFIG` environment variable (see commented section in docker-compose.yml), but we use the mounted file approach for better maintainability.
+
+### Initial Setup
+
 - The root admin account uses `${HOME_CLOUD_EMAIL}` and `${HOME_CLOUD_PASSWORD}` from the root `.env`.
 - First startup can take several minutes while GitLab initializes.
+- Edit `apps/gitlab/gitlab.rb` to customize GitLab settings (external URL, SSH port, performance tuning, etc.).
 
 ## Environment Variables
 
@@ -40,7 +51,7 @@ make up-gitlab
 | `HOME_CLOUD_PASSWORD` | Global | `gitlab` | `your_password_here` | Root admin password for GitLab |
 | `GITLAB_SUBDOMAIN` | Local | `gitlab` | `gitlab` | Subdomain for Traefik routing |
 | `GITLAB_SSH_PORT` | Local | `gitlab` | `2222` | Host port mapped to container SSH port 22 |
-| `GITLAB_OMNIBUS_CONFIG` | Local | `gitlab` | `external_url 'http://gitlab.${DOMAIN}'; gitlab_rails['gitlab_shell_ssh_port']=2222` | Omnibus configuration string |
+| ~~`GITLAB_OMNIBUS_CONFIG`~~ | ~~Local~~ | ~~`gitlab`~~ | ~~`external_url 'http://gitlab.${DOMAIN}'; gitlab_rails['gitlab_shell_ssh_port']=2222`~~ | ~~Omnibus configuration string (replaced by mounted gitlab.rb file)~~ |
 
 ## Volumes & Networks
 
