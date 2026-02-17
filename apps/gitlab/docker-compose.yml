@@ -35,6 +35,10 @@ services:
       start_period: 5m
     env_file:
       - .env
+    # GitLab requires larger shared memory for its Prometheus metrics and 
+    # inter-process communication. The Docker default (64MB) causes 
+    # 'No space left on device' errors and 500 status codes in the UI.
+    shm_size: '256m'
 
 networks:
   home_network:
