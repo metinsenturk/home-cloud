@@ -1,0 +1,49 @@
+services:
+  gitlab:
+    image: gitlab/gitlab-ee:latest
+    container_name: gitlab
+    restart: unless-stopped
+    networks:
+      - home_network
+    # SSH is exposed for Git over SSH. HTTP is routed through Traefik.
+    ports:
+      - "${GITLAB_SSH_PORT}:22"
+    # Omnibus stores data, config, and logs in these paths.
+    volumes:
+      - home_gitlab_data:/var/opt/gitlab
+      - home_gitlab_config:/etc/gitlab
+      - home_gitlab_logs:/var/log/gitlab
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gitlab.rule=Host(`${GITLAB_SUBDOMAIN}.${DOMAIN}`)"
+      - "traefik.http.services.gitlab.loadbalancer.server.port=80"
+      - "traefik.docker.network=home_network"
+    environment:
+      - TZ=${TZ}
+      - GITLAB_ROOT_EMAIL=${HOME_CLOUD_EMAIL}
+      - GITLAB_ROOT_PASSWORD=${HOME_CLOUD_PASSWORD}
+      - GITLAB_OMNIBUS_CONFIG=${GITLAB_OMNIBUS_CONFIG}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/-/readiness  || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 5m
+    env_file:
+      - .env
+
+networks:
+  home_network:
+    external: true
+
+volumes:
+  home_gitlab_data:
+    name: home_gitlab_data
+  home_gitlab_config:
+    name: home_gitlab_config
+  home_gitlab_logs:
+    name: home_gitlab_logs
