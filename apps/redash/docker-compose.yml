@@ -1,4 +1,11 @@
-version: '3.8'
+# Here we define a reusable healthcheck configuration for Redash services
+# this is a yaml anchor that can be referenced in multiple services to avoid duplication
+x-redash-healthcheck: &redash-healthcheck
+  test: ["CMD", "python", "-c", "from redash import create_app; create_app().app_context().push()"]
+  interval: 30s
+  timeout: 20s
+  retries: 3
+  start_period: 30s
 
 services:
   postgres:
@@ -47,12 +54,11 @@ services:
   redash:
     image: redash/redash:latest
     container_name: redash
+    command: server
     restart: unless-stopped
     networks:
       - home_network
       - home_redash_network
-    volumes:
-      - home_redash_data:/app
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.redash.rule=Host(`redash.${DOMAIN}`)"
@@ -68,10 +74,12 @@ services:
       REDASH_ENFORCE_CSRF: "true"
       REDASH_MAIL_SERVER: ${HOME_CLOUD_SMTP_HOST}
       REDASH_MAIL_PORT: ${HOME_CLOUD_SMTP_PORT}
-      REDASH_MAIL_USE_TLS: "true"
+      REDASH_MAIL_USE_TLS: ${HOME_CLOUD_SMTP_SECURE}
       REDASH_MAIL_USERNAME: ${HOME_CLOUD_SMTP_USERNAME}
       REDASH_MAIL_PASSWORD: ${HOME_CLOUD_SMTP_PASSWORD}
       REDASH_MAIL_DEFAULT_SENDER: ${HOME_CLOUD_EMAIL}
+      REDASH_GOOGLE_CLIENT_ID: ${GOOGLE_AUTH_CLIENT_ID}
+      REDASH_GOOGLE_CLIENT_SECRET: ${GOOGLE_AUTH_CLIENT_SECRET}
       TZ: ${TZ}
     logging:
       driver: json-file
@@ -106,10 +114,14 @@ services:
       driver: json-file
       options:
         max-size: "10m"
+    healthcheck:
+      <<: *redash-healthcheck
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      redash:
         condition: service_healthy
 
   redash-worker:
@@ -125,19 +137,23 @@ services:
       REDASH_COOKIE_SECRET: ${REDASH_COOKIE_SECRET}
       REDASH_LOG_LEVEL: INFO
       TZ: ${TZ}
+      QUEUES: "periodic,emails,default,scheduled_queries,queries,schemas"
+      WORKERS_COUNT: 2
     logging:
       driver: json-file
       options:
         max-size: "10m"
+    healthcheck:
+      <<: *redash-healthcheck
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      redash:
+        condition: service_healthy
 
 volumes:
-  home_redash_data:
-    name: home_redash_data
   home_redash_postgres_data:
     name: home_redash_postgres_data
   home_redash_redis_data:
