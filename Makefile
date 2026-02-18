@@ -302,6 +302,20 @@ down-memos:
 		--env-file apps/memos/.env \
 		-f apps/memos/docker-compose.yml down
 
+.PHONY: up-mailpit
+up-mailpit: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/mailpit/.env \
+		-f apps/mailpit/docker-compose.yml up -d
+
+.PHONY: down-mailpit
+down-mailpit:
+	docker compose \
+		--env-file .env \
+		--env-file apps/mailpit/.env \
+		-f apps/mailpit/docker-compose.yml down
+
 .PHONY: up-gitlab
 up-gitlab: create-network
 	docker compose \
@@ -322,9 +336,9 @@ down-gitlab:
 # =============================================================
 
 .PHONY: up-all
-up-all: up-traefik up-dozzle up-wud up-infra-postgres up-infra-mssql up-infra-mongodb up-infisical up-beszel up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-gitlab up-pgadmin up-pgbackweb
+up-all: up-traefik up-dozzle up-wud up-infra-postgres up-infra-mssql up-infra-mongodb up-infisical up-beszel up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-mailpit up-gitlab up-pgadmin up-pgbackweb
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-pgbackweb down-pgadmin down-gitlab down-memos down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-beszel down-infisical down-infra-mongodb down-infra-mssql down-infra-postgres down-wud down-dozzle down-traefik
+down-all: down-pgbackweb down-pgadmin down-gitlab down-mailpit down-memos down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-beszel down-infisical down-infra-mongodb down-infra-mssql down-infra-postgres down-wud down-dozzle down-traefik
 	@echo "All services stopped."
