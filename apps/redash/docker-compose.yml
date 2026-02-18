@@ -1,0 +1,151 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: redash_postgres
+    restart: unless-stopped
+    networks:
+      - home_redash_network
+    volumes:
+      - home_redash_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: redash
+      POSTGRES_USER: redash
+      POSTGRES_PASSWORD: ${REDASH_DB_PASSWORD}
+      TZ: ${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  redis:
+    image: redis:latest
+    container_name: redash_redis
+    restart: unless-stopped
+    networks:
+      - home_redash_network
+    volumes:
+      - home_redash_redis_data:/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  redash:
+    image: redash/redash:latest
+    container_name: redash
+    restart: unless-stopped
+    networks:
+      - home_network
+      - home_redash_network
+    volumes:
+      - home_redash_data:/app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.redash.rule=Host(`redash.${DOMAIN}`)"
+      - "traefik.http.services.redash.loadbalancer.server.port=5000"
+      - "traefik.docker.network=home_network"
+    environment:
+      REDASH_DATABASE_URL: postgresql://redash:${REDASH_DB_PASSWORD}@postgres:5432/redash
+      REDASH_REDIS_URL: redis://redis:6379/0
+      REDASH_COOKIE_SECRET: ${REDASH_COOKIE_SECRET}
+      REDASH_HOST: https://redash.${DOMAIN}
+      REDASH_WEB_WORKERS: 4
+      REDASH_LOG_LEVEL: INFO
+      REDASH_ENFORCE_CSRF: "true"
+      REDASH_MAIL_SERVER: ${HOME_CLOUD_SMTP_HOST}
+      REDASH_MAIL_PORT: ${HOME_CLOUD_SMTP_PORT}
+      REDASH_MAIL_USE_TLS: "true"
+      REDASH_MAIL_USERNAME: ${HOME_CLOUD_SMTP_USERNAME}
+      REDASH_MAIL_PASSWORD: ${HOME_CLOUD_SMTP_PASSWORD}
+      REDASH_MAIL_DEFAULT_SENDER: ${HOME_CLOUD_EMAIL}
+      TZ: ${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/ping"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  redash-scheduler:
+    image: redash/redash:latest
+    container_name: redash_scheduler
+    command: scheduler
+    restart: unless-stopped
+    networks:
+      - home_redash_network
+    environment:
+      REDASH_DATABASE_URL: postgresql://redash:${REDASH_DB_PASSWORD}@postgres:5432/redash
+      REDASH_REDIS_URL: redis://redis:6379/0
+      REDASH_COOKIE_SECRET: ${REDASH_COOKIE_SECRET}
+      REDASH_LOG_LEVEL: INFO
+      TZ: ${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  redash-worker:
+    image: redash/redash:latest
+    container_name: redash_worker
+    command: worker
+    restart: unless-stopped
+    networks:
+      - home_redash_network
+    environment:
+      REDASH_DATABASE_URL: postgresql://redash:${REDASH_DB_PASSWORD}@postgres:5432/redash
+      REDASH_REDIS_URL: redis://redis:6379/0
+      REDASH_COOKIE_SECRET: ${REDASH_COOKIE_SECRET}
+      REDASH_LOG_LEVEL: INFO
+      TZ: ${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  home_redash_data:
+    name: home_redash_data
+  home_redash_postgres_data:
+    name: home_redash_postgres_data
+  home_redash_redis_data:
+    name: home_redash_redis_data
+
+networks:
+  home_network:
+    external: true
+  home_redash_network:
+    name: home_redash_network
+    driver: bridge
