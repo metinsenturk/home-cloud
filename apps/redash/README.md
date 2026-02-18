@@ -54,6 +54,19 @@ Before starting Redash for the first time:
    - `HOME_CLOUD_SMTP_PASSWORD` - SMTP password
    - `HOME_CLOUD_EMAIL` - Sender email address
 
+5. **Run Database Migration:**
+    Create the database tables:
+    ```bash
+    docker exec redash /app/manage.py database create_tables
+    ```
+
+    **See [FIRST_STARTUP.md](FIRST_STARTUP.md)** for a complete step-by-step guide including:
+    - Generating secure secrets
+    - Configuring environment variables
+    - Starting services and initializing the database
+    - Creating your admin account
+    - Accessing Redash for the first time
+
 4. **First-Run Initialization:**
    After the services start, visit `redash.${DOMAIN}` and complete the setup wizard to create an admin account.
 
