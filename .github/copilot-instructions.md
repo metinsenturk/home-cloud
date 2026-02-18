@@ -124,6 +124,8 @@ down-appname:
     - `DOMAIN`, `TZ`, `PUID`, `PGID`
     - `HOME_CLOUD_EMAIL`, `HOME_CLOUD_PASSWORD`
     - `INFRA_POSTGRES_PASSWORD`, `OPENAI_API_KEY`, etc.
+- **SMTP Variables:** When an app requires mail settings, map its local variables to the HOME_CLOUD_SMTP_* suite.
+    - Note: Always check if the app requires a "STARTTLS" vs "SSL/TLS" setting and match it to HOME_CLOUD_SMTP_SECURE.
 
 ## Secret Management
 - **Global Secrets:** Store in root `.env` for shared services (e.g., `INFRA_POSTGRES_PASSWORD`).
