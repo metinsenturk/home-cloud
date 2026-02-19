@@ -32,6 +32,8 @@ No additional configuration is required. The service starts with:
 - Port 8080 (internal) → routed via Traefik as `marimo.${DOMAIN}`
 - `--host 0.0.0.0` (listens on all interfaces for Traefik to reach it)
 
+Marimo uses marimo.toml file and pyproject.toml file to allow setting configuration for the app. The `pyproject.toml` file is mounted (marimo doesn't overwrite these settings) so that some customization can be done before the app launches. Read more about [user configuration in Marimo Docs](https://docs.marimo.io/guides/configuration/?h=config#configuration).
+
 ## Environment Variables
 
 | Variable Name | Source | Service | Default/Example Value | Description |
