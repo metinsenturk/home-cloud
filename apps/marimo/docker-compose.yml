@@ -6,7 +6,10 @@ services:
     networks:
       - home_network
     volumes:
-      - home_marimo_data:/home/marimo/.marimo
+      - home_marimo_data:/app
+      # Mount the configuration file to provide necessary settings and API keys.
+      # https://docs.marimo.io/guides/configuration/#overriding-settings-with-pyprojecttoml
+      - ./pyproject.toml:/app/pyproject.toml
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.marimo.rule=Host(`marimo.${DOMAIN}`)"
@@ -14,6 +17,8 @@ services:
       - "traefik.docker.network=home_network"
     environment:
       - TZ=${TZ}
+      - LANG=${LANG}
+      - LC_ALL=${LC_ALL}
     logging:
       driver: json-file
       options:

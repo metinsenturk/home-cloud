@@ -1,0 +1,5 @@
+[tool.marimo.display]
+theme = "system"  # Options: "light", "dark", or "system"
+
+[tool.marimo.package_management]
+manager = "uv"
