@@ -1,6 +1,8 @@
 # Host Ports
 This file tracks all port mappings from the host machine to internal containers to prevent IP/Port conflicts.
 
+Portrainer app also shows which ports are in use in the server. Go to http://portracker.localhost (or `http://portracker.${DOMAIN}$/`) to see more information.
+
 ## Ports Table
 | Host Port | Service Name | Internal Port | Description |
 | :--- | :--- | :--- | :--- |

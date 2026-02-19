@@ -1,0 +1,58 @@
+services:
+  portracker:
+    image: mostafawahied/portracker:latest
+    container_name: portracker
+    restart: unless-stopped
+    # Port discovery needs access to host process namespace and /proc entries.
+    # Required for comprehensive system port detection
+    # This allows portracker to see all host processes for accurate port mapping
+    pid: "host"
+    # Capabilities & security (universal, required)
+    # - SYS_PTRACE enables reading other processes' /proc entries on Linux hosts
+    # - SYS_ADMIN enables namespace entry on Docker Desktop (macOS/Windows)
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    # - apparmor:unconfined disables AppArmor restrictions that may block /proc access
+    security_opt:
+      - apparmor:unconfined
+    networks:
+      - home_network
+    volumes:
+      # Persist the embedded SQLite database.
+      - home_portracker_data:/data
+      # Read-only socket access enables container discovery.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portracker.rule=Host(`portracker.${DOMAIN}`)"
+      - "traefik.http.services.portracker.loadbalancer.server.port=${PORT}"
+      - "traefik.docker.network=home_network"
+    environment:
+      - TZ=${TZ}
+      - PORT=${PORT}
+      - DATABASE_PATH=${DATABASE_PATH}
+      - ENABLE_AUTH=${ENABLE_AUTH}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - TRUENAS_API_KEY=${TRUENAS_API_KEY}
+      - DEBUG=${DEBUG}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:4999/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    env_file:
+      - .env
+
+networks:
+  home_network:
+    external: true
+
+volumes:
+  home_portracker_data:
+    name: home_portracker_data
