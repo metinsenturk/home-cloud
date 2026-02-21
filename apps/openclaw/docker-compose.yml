@@ -1,0 +1,53 @@
+services:
+  openclaw:
+    image: ghcr.io/openclaw/openclaw:main
+    container_name: openclaw
+    restart: unless-stopped
+    networks:
+      - home_network
+    volumes:
+      # Persist /home/node so gateway data survives container rebuilds.
+      - home_openclaw_home_data:/home/node
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.openclaw.rule=Host(`${OPENCLAW_SUBDOMAIN}.${DOMAIN}`)"
+      - "traefik.http.services.openclaw.loadbalancer.server.port=${OPENCLAW_GATEWAY_PORT}"
+      - "traefik.docker.network=home_network"
+    environment:
+      - TZ=${TZ}
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+      - OPENCLAW_GATEWAY_BIND=${OPENCLAW_GATEWAY_BIND}
+      - OPENCLAW_GATEWAY_PORT=${OPENCLAW_GATEWAY_PORT}
+      - OPENCLAW_GATEWAY_TRUSTED_PROXIES=127.0.0.1,172.16.0.0/12,192.168.0.0/16
+      - OPENCLAW_MODEL_PRIMARY=${OPENCLAW_MODEL_PRIMARY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD-SHELL", "node openclaw.mjs health --token \"$$OPENCLAW_GATEWAY_TOKEN\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    command: 
+      - "node"
+      - "openclaw.mjs"
+      - "gateway"
+      - "--allow-unconfigured"
+      - "--bind"
+      - "${OPENCLAW_GATEWAY_BIND}"
+      - "--port"
+      - "${OPENCLAW_GATEWAY_PORT}"
+    env_file:
+      - .env
+
+networks:
+  home_network:
+    external: true
+
+volumes:
+  home_openclaw_home_data:
+    name: home_openclaw_home_data
