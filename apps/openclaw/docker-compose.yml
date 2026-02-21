@@ -8,6 +8,8 @@ services:
     volumes:
       # Persist /home/node so gateway data survives container rebuilds.
       - home_openclaw_home_data:/home/node
+      # Mount configuration file for gateway settings, etc.
+      - ./openclaw.json:/home/node/.openclaw/openclaw.json
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.openclaw.rule=Host(`${OPENCLAW_SUBDOMAIN}.${DOMAIN}`)"
@@ -36,7 +38,6 @@ services:
       - "node"
       - "openclaw.mjs"
       - "gateway"
-      - "--allow-unconfigured"
       - "--bind"
       - "${OPENCLAW_GATEWAY_BIND}"
       - "--port"
