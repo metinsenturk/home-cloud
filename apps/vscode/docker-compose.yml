@@ -1,0 +1,52 @@
+---
+services:
+  vscode:
+    # VS Code Server from LinuxServer.io - VS Code running on a remote server accessible via browser
+    image: lscr.io/linuxserver/code-server:latest
+    container_name: vscode
+    restart: unless-stopped
+    networks:
+      - home_network
+    volumes:
+      # Configuration and workspace storage - persists all VS Code settings, extensions, and user workspace
+      - home_vscode_config_data:/config
+      # Mount pre-configured VS Code settings for Python environment
+      - ./settings.json:/config/data/User/settings.json:ro
+    labels:
+      # Traefik reverse proxy configuration - routes vscode.{DOMAIN} to this service
+      - "traefik.enable=true"
+      - "traefik.http.routers.vscode.rule=Host(`vscode.${DOMAIN}`)"
+      - "traefik.http.services.vscode.loadbalancer.server.port=8443"
+      # Explicit network specification - ensures Traefik uses home_network for routing to prevent 504 errors
+      - "traefik.docker.network=home_network"
+    environment:
+      # User ID and Group ID - ensures proper file permissions and ownership within the container
+      - PUID=${PUID}
+      - PGID=${PGID}
+      # Timezone - for consistent timestamps across all services
+      - TZ=${TZ}
+      # Password for VS Code Server web interface - uses global admin password
+      - PASSWORD=${HOME_CLOUD_PASSWORD}
+      # Default workspace location - VS Code opens this directory by default
+      - DEFAULT_WORKSPACE=/config/workspace
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      # Uses curl to check if VS Code Server is responding on port 8443
+      # Note: curl will warn about self-signed certificate, hence the -k flag
+      test: ["CMD", "curl", "-k", "-f", "http://localhost:8443/"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  home_network:
+    external: true
+
+volumes:
+  home_vscode_config_data:
+    name: home_vscode_config_data
