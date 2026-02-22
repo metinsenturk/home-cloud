@@ -1,0 +1,80 @@
+services:
+  coder-db:
+    image: postgres:latest
+    container_name: coder_db
+    restart: unless-stopped
+    # PostgreSQL database for Coder metadata and state.
+    networks:
+      - home_coder_network
+    volumes:
+      - home_coder_db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${CODER_DB_USER}
+      - POSTGRES_PASSWORD=${CODER_DB_PASSWORD}
+      - POSTGRES_DB=${CODER_DB_NAME}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "$$POSTGRES_USER", "-d", "$$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    env_file:
+      - .env
+
+  coder:
+    image: ghcr.io/coder/coder:latest
+    container_name: coder
+    restart: unless-stopped
+    # Coder web service routed by Traefik with an internal database network.
+    networks:
+      - home_network
+      - home_coder_network
+    volumes:
+      # Docker socket access is required for Docker-based templates.
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Persist Coder home for config and tunnel metadata.
+      - home_coder_home_data:/home/coder
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.coder.rule=Host(`coder.${DOMAIN}`)"
+      - "traefik.http.services.coder.loadbalancer.server.port=3000"
+      - "traefik.docker.network=home_network"
+    environment:
+      - CODER_ACCESS_URL=${CODER_ACCESS_URL}
+      - CODER_WILDCARD_ACCESS_URL=${CODER_WILDCARD_ACCESS_URL}
+      - CODER_HTTP_ADDRESS=${CODER_HTTP_ADDRESS}
+      - CODER_PG_CONNECTION_URL=${CODER_PG_CONNECTION_URL}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    depends_on:
+      coder-db:
+        condition: service_healthy
+    env_file:
+      - .env
+    group_add:
+      - "1001"
+
+networks:
+  home_network:
+    external: true
+  home_coder_network:
+    name: home_coder_network
+    driver: bridge
+
+volumes:
+  home_coder_db_data:
+    name: home_coder_db_data
+  home_coder_home_data:
+    name: home_coder_home_data
