@@ -40,7 +40,8 @@ services:
       - home_coder_home_data:/home/coder
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.coder.rule=Host(`coder.${DOMAIN}`)"
+      # HostRegexp is used to route both the root domain and any subdomains to the Coder service.
+      - "traefik.http.routers.coder.rule=Host(`coder.${DOMAIN}`) || HostRegexp(`{subdomain:[a-z0-9-]+}.coder.${DOMAIN}`)"
       - "traefik.http.services.coder.loadbalancer.server.port=3000"
       - "traefik.docker.network=home_network"
     environment:
@@ -48,6 +49,8 @@ services:
       - CODER_WILDCARD_ACCESS_URL=${CODER_WILDCARD_ACCESS_URL}
       - CODER_HTTP_ADDRESS=${CODER_HTTP_ADDRESS}
       - CODER_PG_CONNECTION_URL=${CODER_PG_CONNECTION_URL}
+      # For development with self-signed certs, skip TLS verification. Needed for Coder CLI to connect to the server
+      - CODER_TLS_INSECURE_SKIP_VERIFY=true
     logging:
       driver: "json-file"
       options:
@@ -63,8 +66,18 @@ services:
         condition: service_healthy
     env_file:
       - .env
+    # Add the coder user to the docker group to allow Coder to manage Docker containers for workspaces.
+    # In the host system, find the docker group ID, use below.
+    # getent group docker
+    # Returns something like "docker:x:1001:username", where 1001 is the group ID to use below.
     group_add:
       - "1001"
+    # `coder` service requires an `extra_hosts` mapping to resolve its own external domain.
+    # This mapping tells the Coder container: "If you need to reach `coder.localhost`, go out 
+    # to the Windows Host." Traefik (listening on the host) then receives the request and
+    # routes it back into the Coder container correctly.
+    extra_hosts:
+      - "coder.localhost:host-gateway"
 
 networks:
   home_network:
