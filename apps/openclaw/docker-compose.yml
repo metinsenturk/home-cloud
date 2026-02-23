@@ -1,6 +1,6 @@
 services:
   openclaw:
-    image: ghcr.io/openclaw/openclaw:main
+    image: ghcr.io/openclaw/openclaw:latest
     container_name: openclaw
     restart: unless-stopped
     networks:
@@ -9,7 +9,6 @@ services:
       # Persist /home/node so gateway data survives container rebuilds.
       - home_openclaw_home_data:/home/node
       # Mount configuration file for gateway settings, etc.
-      - ./openclaw.json:/home/node/.openclaw/openclaw.json
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.openclaw.rule=Host(`${OPENCLAW_SUBDOMAIN}.${DOMAIN}`)"
@@ -38,6 +37,9 @@ services:
       - "node"
       - "openclaw.mjs"
       - "gateway"
+      # TODO: Switch to a config file, need gateway.mode=local instead of --allow-unconfigured.
+      # easier than json for now. 
+      - "--allow-unconfigured"
       - "--bind"
       - "${OPENCLAW_GATEWAY_BIND}"
       - "--port"
