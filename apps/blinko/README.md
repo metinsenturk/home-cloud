@@ -28,6 +28,8 @@ make up-blinko
 ## Configuration
 
 1. **Environment Variables**: Copy `.env.example` to `.env` and configure:
+   - `BLINKO_DB_NAME`: PostgreSQL database name (default: `blinko`)
+   - `BLINKO_DB_USER`: PostgreSQL database user (default: `postgres`)
    - `BLINKO_DB_PASSWORD`: Secure password for PostgreSQL database
    - `BLINKO_NEXTAUTH_SECRET`: Generate using `openssl rand -hex 32` (64 characters recommended)
 
@@ -44,6 +46,8 @@ make up-blinko
 
 | Variable Name | Source | Service | Default/Example Value | Description |
 |--------------|--------|---------|----------------------|-------------|
+| `BLINKO_DB_NAME` | Local | blinko-db, blinko | blinko | PostgreSQL database name |
+| `BLINKO_DB_USER` | Local | blinko-db, blinko | postgres | PostgreSQL database user |
 | `BLINKO_DB_PASSWORD` | Local | blinko-db, blinko | N/A | PostgreSQL database password |
 | `BLINKO_NEXTAUTH_SECRET` | Local | blinko | N/A | NextAuth.js secret for session encryption (64+ chars) |
 | `TZ` | Global | Both | UTC | Timezone setting |

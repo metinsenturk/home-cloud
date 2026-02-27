@@ -8,8 +8,8 @@ services:
     volumes:
       - home_blinko_postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: blinko
-      POSTGRES_USER: postgres
+      POSTGRES_DB: ${BLINKO_DB_NAME}
+      POSTGRES_USER: ${BLINKO_DB_USER}
       POSTGRES_PASSWORD: ${BLINKO_DB_PASSWORD}
       TZ: ${TZ}
     logging:
@@ -39,7 +39,7 @@ services:
       - "traefik.docker.network=home_network"
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://postgres:${BLINKO_DB_PASSWORD}@blinko-db:5432/blinko
+      DATABASE_URL: postgresql://${BLINKO_DB_USER}:${BLINKO_DB_PASSWORD}@blinko-db:5432/${BLINKO_DB_NAME}
       NEXTAUTH_SECRET: ${BLINKO_NEXTAUTH_SECRET}
       NEXTAUTH_URL: http://blinko.${DOMAIN}
       NEXT_PUBLIC_BASE_URL: http://blinko.${DOMAIN}
@@ -48,12 +48,6 @@ services:
       driver: json-file
       options:
         max-size: "10m"
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:1111/health || exit 1"]
-      interval: 1m
-      timeout: 10s
-      retries: 3
-      start_period: 30s
     depends_on:
       blinko-db:
         condition: service_healthy
