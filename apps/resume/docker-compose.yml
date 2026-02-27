@@ -1,0 +1,145 @@
+services:
+  resume-db:
+    image: postgres:alpine
+    container_name: resume_db
+    restart: unless-stopped
+    networks:
+      - home_resume_network
+    volumes:
+      - home_resume_db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${RESUME_DB_NAME}
+      - POSTGRES_USER=${RESUME_DB_USER}
+      - POSTGRES_PASSWORD=${RESUME_DB_PASSWORD}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "$$POSTGRES_USER", "-d", "$$POSTGRES_DB"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  resume-seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    container_name: resume_seaweedfs
+    restart: unless-stopped
+    command: server -s3 -filer -dir=/data -ip=0.0.0.0
+    networks:
+      - home_resume_network
+    volumes:
+      - home_resume_seaweedfs_data:/data
+    environment:
+      - AWS_ACCESS_KEY_ID=${RESUME_S3_ACCESS_KEY}
+      - AWS_SECRET_ACCESS_KEY=${RESUME_S3_SECRET_KEY}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8888"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  resume-seaweedfs-bucket:
+    image: quay.io/minio/mc:latest
+    container_name: resume_seaweedfs_bucket
+    restart: on-failure
+    networks:
+      - home_resume_network
+    entrypoint: >
+      /bin/sh -c "
+        sleep 5;
+        mc alias set seaweedfs http://resume-seaweedfs:8333 ${RESUME_S3_ACCESS_KEY} ${RESUME_S3_SECRET_KEY};
+        mc mb seaweedfs/reactive-resume;
+        exit 0;
+      "
+    depends_on:
+      resume-seaweedfs:
+        condition: service_healthy
+
+  resume-browserless:
+    image: ghcr.io/browserless/chromium:latest
+    container_name: resume_browserless
+    restart: unless-stopped
+    networks:
+      - home_resume_network
+    environment:
+      - QUEUED=10
+      - HEALTH=true
+      - CONCURRENT=5
+      - TOKEN=${RESUME_BROWSERLESS_TOKEN}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/pressure?token=$$TOKEN"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  resume:
+    image: amruthpillai/reactive-resume:latest
+    container_name: resume
+    restart: unless-stopped
+    networks:
+      - home_network
+      - home_resume_network
+    volumes:
+      - home_resume_data:/app/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.resume.rule=Host(`resume.${DOMAIN}`)"
+      - "traefik.http.services.resume.loadbalancer.server.port=3000"
+      - "traefik.docker.network=home_network"
+    environment:
+      - TZ=${TZ}
+      - NODE_ENV=production
+      - APP_URL=https://resume.${DOMAIN}
+      - PRINTER_APP_URL=http://resume:3000
+      - PRINTER_ENDPOINT=ws://resume-browserless:3000?token=${RESUME_BROWSERLESS_TOKEN}
+      - DATABASE_URL=postgresql://${RESUME_DB_USER}:${RESUME_DB_PASSWORD}@resume-db:5432/${RESUME_DB_NAME}
+      - AUTH_SECRET=${RESUME_AUTH_SECRET}
+      - S3_ACCESS_KEY_ID=${RESUME_S3_ACCESS_KEY}
+      - S3_SECRET_ACCESS_KEY=${RESUME_S3_SECRET_KEY}
+      - S3_ENDPOINT=http://resume-seaweedfs:8333
+      - S3_BUCKET=reactive-resume
+      - S3_FORCE_PATH_STYLE=true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      resume-db:
+        condition: service_healthy
+      resume-browserless:
+        condition: service_healthy
+      resume-seaweedfs-bucket:
+        condition: service_completed_successfully
+
+networks:
+  home_network:
+    external: true
+  home_resume_network:
+    name: home_resume_network
+    driver: bridge
+
+volumes:
+  home_resume_data:
+    name: home_resume_data
+  home_resume_db_data:
+    name: home_resume_db_data
+  home_resume_seaweedfs_data:
+    name: home_resume_seaweedfs_data
