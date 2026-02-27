@@ -316,6 +316,20 @@ down-memos:
 		--env-file apps/memos/.env \
 		-f apps/memos/docker-compose.yml down
 
+.PHONY: up-metasearch
+up-metasearch: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/metasearch/.env \
+		-f apps/metasearch/docker-compose.yml up -d
+
+.PHONY: down-metasearch
+down-metasearch:
+	docker compose \
+		--env-file .env \
+		--env-file apps/metasearch/.env \
+		-f apps/metasearch/docker-compose.yml down
+
 .PHONY: up-mailpit
 up-mailpit: create-network
 	docker compose \
@@ -448,9 +462,9 @@ down-yopass:
 # =============================================================
 
 .PHONY: up-all
-up-all: up-traefik up-dozzle up-wud up-infra-postgres up-infra-mssql up-infra-mongodb up-infisical up-beszel up-coder up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-mailpit up-portracker up-gitlab up-pgadmin up-pgbackweb up-redash up-vscode up-openclaw up-uptime-kuma up-resume up-yopass
+up-all: up-traefik up-dozzle up-wud up-infra-postgres up-infra-mssql up-infra-mongodb up-infisical up-beszel up-coder up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-metasearch up-mailpit up-portracker up-gitlab up-pgadmin up-pgbackweb up-redash up-vscode up-openclaw up-uptime-kuma up-resume up-yopass
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-yopass down-resume down-uptime-kuma down-openclaw down-vscode down-redash down-pgbackweb down-pgadmin down-gitlab down-portracker down-mailpit down-memos down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-coder down-beszel down-infisical down-infra-mongodb down-infra-mssql down-infra-postgres down-wud down-dozzle down-traefik
+down-all: down-yopass down-resume down-uptime-kuma down-openclaw down-vscode down-redash down-pgbackweb down-pgadmin down-gitlab down-portracker down-mailpit down-metasearch down-memos down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-coder down-beszel down-infisical down-infra-mongodb down-infra-mssql down-infra-postgres down-wud down-dozzle down-traefik
 	@echo "All services stopped."

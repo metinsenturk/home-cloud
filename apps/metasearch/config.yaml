@@ -1,0 +1,60 @@
+engines:
+  # GitHub - Search PRs, issues, and repositories
+  # Required scopes: repo (full control of private repositories)
+  github:
+    organization: ${METASEARCH_GITHUB_ORG}
+    token: ${METASEARCH_GITHUB_TOKEN}
+
+  # GitLab - Search merge requests and projects
+  # Required scopes: api, read_user, read_repository
+  gitlab:
+    origin: ${METASEARCH_GITLAB_ORIGIN}
+    token: ${METASEARCH_GITLAB_TOKEN}
+
+  # Slack - Search team messages and channels
+  # Required scopes: channels:read, search:read
+  # Token format: xoxp-***
+  slack:
+    organization: ${METASEARCH_SLACK_ORG}
+    token: ${METASEARCH_SLACK_TOKEN}
+    bots: false
+
+  # Jira - Search issues and tickets
+  # Use API token from: https://id.atlassian.com/manage-profile/security/api-tokens
+  jira:
+    origin: ${METASEARCH_JIRA_ORIGIN}
+    token: ${METASEARCH_JIRA_TOKEN}
+    user: ${METASEARCH_JIRA_USER}
+
+  # Confluence - Search documentation pages
+  # Use same API token as Jira
+  confluence:
+    origin: ${METASEARCH_CONFLUENCE_ORIGIN}
+    token: ${METASEARCH_CONFLUENCE_TOKEN}
+    user: ${METASEARCH_CONFLUENCE_USER}
+
+  # Notion - Search knowledge base pages
+  # Create integration at: https://www.notion.so/my-integrations
+  # Token format: secret_***
+  notion:
+    token: ${METASEARCH_NOTION_TOKEN}
+    workspace: ${METASEARCH_NOTION_WORKSPACE}
+
+  # Jenkins - Search CI/CD job names
+  # Token and user are optional for public Jenkins
+  jenkins:
+    origin: ${METASEARCH_JENKINS_ORIGIN}
+    user: ${METASEARCH_JENKINS_USER}
+    token: ${METASEARCH_JENKINS_TOKEN}
+
+  # Website - Search custom sites via sitemap
+  # Add your own sitemap URLs or use examples below
+  website:
+    sitemaps:
+      - ${METASEARCH_WEBSITE_SITEMAP}
+
+# Optional: Custom footer HTML
+# footer: 'Custom footer text'
+
+# Optional: Google Analytics tracking
+# trackingId: UA-00000000-00

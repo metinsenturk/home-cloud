@@ -1,0 +1,62 @@
+services:
+  metasearch:
+    image: duolingo/metasearch:latest
+    container_name: metasearch
+    restart: unless-stopped
+    networks:
+      - home_network
+    volumes:
+      - ./config.yaml:/data/config.yaml:ro
+      - home_metasearch_data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.metasearch.rule=Host(`metasearch.${DOMAIN}`)"
+      - "traefik.http.services.metasearch.loadbalancer.server.port=3000"
+      - "traefik.docker.network=home_network"
+    environment:
+      - PORT=${METASEARCH_PORT}
+      - NODE_ENV=production
+      # GitHub
+      - METASEARCH_GITHUB_TOKEN=${METASEARCH_GITHUB_TOKEN}
+      - METASEARCH_GITHUB_ORG=${METASEARCH_GITHUB_ORG}
+      # GitLab
+      - METASEARCH_GITLAB_TOKEN=${METASEARCH_GITLAB_TOKEN}
+      - METASEARCH_GITLAB_ORIGIN=${METASEARCH_GITLAB_ORIGIN}
+      # Slack
+      - METASEARCH_SLACK_TOKEN=${METASEARCH_SLACK_TOKEN}
+      - METASEARCH_SLACK_ORG=${METASEARCH_SLACK_ORG}
+      # Jira
+      - METASEARCH_JIRA_TOKEN=${METASEARCH_JIRA_TOKEN}
+      - METASEARCH_JIRA_USER=${METASEARCH_JIRA_USER}
+      - METASEARCH_JIRA_ORIGIN=${METASEARCH_JIRA_ORIGIN}
+      # Confluence
+      - METASEARCH_CONFLUENCE_TOKEN=${METASEARCH_CONFLUENCE_TOKEN}
+      - METASEARCH_CONFLUENCE_USER=${METASEARCH_CONFLUENCE_USER}
+      - METASEARCH_CONFLUENCE_ORIGIN=${METASEARCH_CONFLUENCE_ORIGIN}
+      # Notion
+      - METASEARCH_NOTION_TOKEN=${METASEARCH_NOTION_TOKEN}
+      - METASEARCH_NOTION_WORKSPACE=${METASEARCH_NOTION_WORKSPACE}
+      # Jenkins
+      - METASEARCH_JENKINS_ORIGIN=${METASEARCH_JENKINS_ORIGIN}
+      - METASEARCH_JENKINS_USER=${METASEARCH_JENKINS_USER}
+      - METASEARCH_JENKINS_TOKEN=${METASEARCH_JENKINS_TOKEN}
+      # Website
+      - METASEARCH_WEBSITE_SITEMAP=${METASEARCH_WEBSITE_SITEMAP}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/3000 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  home_network:
+    external: true
+
+volumes:
+  home_metasearch_data:
+    name: home_metasearch_data
