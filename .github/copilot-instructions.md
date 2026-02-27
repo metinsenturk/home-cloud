@@ -21,7 +21,7 @@ The project uses a "Base + App" folder strategy to allow launching subsets of se
     - Volume: `home_infra_<name>_data`
 - **Connectivity:** - Always attach to `home_network` for cross-app discovery.
     - Set `traefik.enable=false` (Infrastructure is accessed via Service Name, not URLs).
-- **Global Variables:** Inherit `TZ` and `DOMAIN` from the root `.env`. Do not duplicate them in app-local `.env` files.
+- **Local Environment Variables:** Each app must define its own environment variables in its local `.env` file. If a variable's value should come from a global variable, reference it in the local `.env` file (e.g., `APP_TZ=${TZ}`), not directly in the compose file.
 
 ## Service Lifecycle & Discovery
 - **New Service Protocol:** Every new application is treated as a modular "plug-in" to the existing Mini-Cloud. It must be research-validated (images, ports, entrypoints) before code generation.
@@ -44,8 +44,9 @@ When generating a new app in `/apps/<name>/docker-compose.yml`, always follow th
 6. Avoid hardcoding ports in the compose file; rely on Traefik for routing.
 7. **Ordering:** Follow the strict key order: `image`, `container_name`, `restart`, `networks`, `volumes`, `labels`, `environment`, `logging`, `healthcheck`, `depends_on`, `env_file`.
 8. **Clean Interpolation:** Use `${VARIABLE}` without hardcoded fallbacks. 
-   - **Inheritance:** Assume global variables like `TZ` and `DOMAIN` are already available from the root `.env`. Do not duplicate them into app-specific environment files.
-   - **Local Defaults:** Define app-specific defaults in the local `/apps/<name>/.env` file.
+    - **Local Variables Only:** Compose files must only reference variables defined in the app's local `.env` file. Never reference global variables directly in compose files.
+    - **Global Variable Mapping:** If an app needs a global variable (like `TZ` or `DOMAIN`), define it in the app's local `.env` file by referencing the global variable (e.g., `MY_APP_TZ=${TZ}`).
+    - **Documentation:** In the app's `.env.example` file, clearly document which variables are set from global variables with comments (e.g., `MY_APP_TZ=${TZ}  # Set from global TZ variable`).
 9. **Network Attachment:** Public services must use `home_network`. Internal communication must use `home_<appname>_network`.
 10. **Explicit Naming**: To prevent Docker Compose from adding folder-name prefixes to resources, always use the `name:` attribute for local networks and volumes. See example below.
 ```yaml
@@ -118,8 +119,8 @@ down-appname:
 
 ## Global Environment Dictionary
 - **Standardization:** All global variables are defined in the root `.env` and documented in the root `.env.example`.
-- **Use of Global Variables:** Apps should reference global variables (e.g., `${DOMAIN}`, `${TZ}`, `${HOME_CLOUD_EMAIL}`) rather than defining their own versions in local `.env` files.
-- **Inheritance:** Apps inherit these via the Makefile's "Double-Env" pattern.
+- **Use of Global Variables:** Apps must define their own variables in their local `.env` file. To use a global variable's value, reference it in the local `.env` file (e.g., `APP_TIMEZONE=${TZ}`, `APP_DOMAIN=${DOMAIN}`).
+- **Inheritance:** Apps access global variables via the Makefile's "Double-Env" pattern, which loads the root `.env` first, then the app's `.env`. This allows app variables to reference and override globals.
 - **Variables:** The full list is defined in the root `.env.example`. Some key variables include:
     - `DOMAIN`, `TZ`, `PUID`, `PGID`
     - `HOME_CLOUD_EMAIL`, `HOME_CLOUD_PASSWORD`
