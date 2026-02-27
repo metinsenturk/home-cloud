@@ -34,7 +34,7 @@ make up-datasette
 
 ## Database Seeding
 
-To create an example database with sample data:
+The included seeding script sets up multiple databases with sample data to get you started quickly.
 
 **Using the provided scripts (Linux/WSL):**
 ```bash
@@ -51,11 +51,35 @@ docker exec datasette python3 /tmp/seed_database.py
 docker exec datasette rm -f /tmp/seed_database.py
 ```
 
-The seeding script creates:
-- `people` table: Sample users with name, role, and city
-- `projects` table: Sample projects with status and owner (FK to people)
+**What gets created:**
 
-Access the example database at: `http://datasette.${DOMAIN}/example`
+1. **example.db** - Custom database with:
+   - `people` table: Sample users with name, role, and city (3 rows)
+   - `projects` table: Sample projects with status and owner (3 rows, FK to people)
+
+2. **chinook.db** - Music store database with:
+   - Artists, albums, tracks, playlists
+   - Customers, invoices, sales data
+   - Ideal for exploring relationships and complex queries
+
+3. **northwind.db** - Classic sales database with:
+   - Customers, orders, products
+   - Employees, suppliers, categories
+   - Great for business analytics demos
+
+4. **fixtures.db** - Datasette's official test database:
+   - Various data types and edge cases
+   - Demonstrates Datasette features
+   - Useful for testing plugins
+
+**Access URLs:**
+- `http://datasette.${DOMAIN}/example`
+- `http://datasette.${DOMAIN}/chinook`
+- `http://datasette.${DOMAIN}/northwind`
+- `http://datasette.${DOMAIN}/fixtures`
+
+**Adding more databases:**
+Edit the `SAMPLE_DATABASES` list at the top of `seed_database.py` to include additional SQLite database URLs.
 
 ## Environment Variables
 
