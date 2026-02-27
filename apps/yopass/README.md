@@ -63,6 +63,11 @@ yopass:
 - All global variables are inherited from the root `.env` via the Makefile's "Double-Env" pattern.
 - This app requires no additional configuration beyond the inherited globals.
 
+## Healthchecks
+
+- **Yopass**: Uses the binary itself to verify health (runs `yopass-server --help`). This approach works since the image contains the compiled Go binary and doesn't require a shell. Configured to check every 30 seconds with a 10-second startup grace period.
+- **Memcached**: Configured with TCP port availability check (verifies port 11211 is listening). Ensures the storage backend is online and accessible.
+
 ## Volumes & Networks
 
 ### Networks
