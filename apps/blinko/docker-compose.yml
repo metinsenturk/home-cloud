@@ -1,0 +1,72 @@
+services:
+  blinko-db:
+    image: postgres:16-alpine
+    container_name: blinko_postgres
+    restart: unless-stopped
+    networks:
+      - home_blinko_network
+    volumes:
+      - home_blinko_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: blinko
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${BLINKO_DB_PASSWORD}
+      TZ: ${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "$$POSTGRES_USER", "-d", "$$POSTGRES_DB"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  blinko:
+    image: blinkospace/blinko:latest
+    container_name: blinko
+    restart: unless-stopped
+    networks:
+      - home_network
+      - home_blinko_network
+    volumes:
+      - home_blinko_data:/app/.blinko
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.blinko.rule=Host(`blinko.${DOMAIN}`)"
+      - "traefik.http.services.blinko.loadbalancer.server.port=1111"
+      - "traefik.docker.network=home_network"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:${BLINKO_DB_PASSWORD}@blinko-db:5432/blinko
+      NEXTAUTH_SECRET: ${BLINKO_NEXTAUTH_SECRET}
+      NEXTAUTH_URL: http://blinko.${DOMAIN}
+      NEXT_PUBLIC_BASE_URL: http://blinko.${DOMAIN}
+      TZ: ${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:1111/health || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      blinko-db:
+        condition: service_healthy
+
+networks:
+  home_network:
+    external: true
+  home_blinko_network:
+    name: home_blinko_network
+    driver: bridge
+
+volumes:
+  home_blinko_data:
+    name: home_blinko_data
+  home_blinko_postgres_data:
+    name: home_blinko_postgres_data

@@ -120,6 +120,20 @@ down-beszel:
 		--env-file apps/beszel/.env \
 		-f apps/beszel/docker-compose.yml down
 
+.PHONY: up-blinko
+up-blinko: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/blinko/.env \
+		-f apps/blinko/docker-compose.yml up -d
+
+.PHONY: down-blinko
+down-blinko:
+	docker compose \
+		--env-file .env \
+		--env-file apps/blinko/.env \
+		-f apps/blinko/docker-compose.yml down
+
 .PHONY: up-coder
 up-coder: create-network
 	docker compose \
@@ -476,9 +490,9 @@ down-yopass:
 # =============================================================
 
 .PHONY: up-all
-up-all: up-traefik up-dozzle up-wud up-infra-postgres up-infra-mssql up-infra-mongodb up-infisical up-beszel up-coder up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-metasearch up-datasette up-mailpit up-portracker up-gitlab up-pgadmin up-pgbackweb up-redash up-vscode up-openclaw up-uptime-kuma up-resume up-yopass
+up-all: up-traefik up-dozzle up-wud up-infra-postgres up-infra-mssql up-infra-mongodb up-infisical up-beszel up-blinko up-coder up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-metasearch up-datasette up-mailpit up-portracker up-gitlab up-pgadmin up-pgbackweb up-redash up-vscode up-openclaw up-uptime-kuma up-resume up-yopass
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-yopass down-resume down-uptime-kuma down-openclaw down-vscode down-redash down-pgbackweb down-pgadmin down-gitlab down-portracker down-mailpit down-datasette down-metasearch down-memos down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-coder down-beszel down-infisical down-infra-mongodb down-infra-mssql down-infra-postgres down-wud down-dozzle down-traefik
+down-all: down-yopass down-resume down-uptime-kuma down-openclaw down-vscode down-redash down-pgbackweb down-pgadmin down-gitlab down-portracker down-mailpit down-datasette down-metasearch down-memos down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-coder down-blinko down-beszel down-infisical down-infra-mongodb down-infra-mssql down-infra-postgres down-wud down-dozzle down-traefik
 	@echo "All services stopped."
