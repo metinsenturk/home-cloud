@@ -22,6 +22,7 @@ services:
       retries: 3
       start_period: 10s
 
+  # SeaweedFS provides S3-compatible distributed storage for file uploads and profile pictures
   resume-seaweedfs:
     image: chrislusf/seaweedfs:latest
     container_name: resume_seaweedfs
@@ -45,6 +46,9 @@ services:
       retries: 3
       start_period: 10s
 
+  # One-time initialization service: creates the S3 bucket if it doesn't exist
+  # This service exits successfully after bucket is created/verified and will not restart on successful completion
+  # Comment this out from the resume depends_on if the bucket is already created and you want faster startup
   resume-seaweedfs-bucket:
     image: quay.io/minio/mc:latest
     container_name: resume_seaweedfs_bucket
@@ -62,6 +66,7 @@ services:
       resume-seaweedfs:
         condition: service_healthy
 
+  # Browserless Chromium: headless browser service for PDF generation and resume export functionality
   resume-browserless:
     image: ghcr.io/browserless/chromium:latest
     container_name: resume_browserless
@@ -84,6 +89,7 @@ services:
       retries: 10
       start_period: 10s
 
+  # Main Reactive Resume application: free and open-source resume builder
   resume:
     image: amruthpillai/reactive-resume:latest
     container_name: resume
@@ -137,8 +143,8 @@ services:
         condition: service_healthy
       resume-browserless:
         condition: service_healthy
-      # resume-seaweedfs-bucket:
-      #   condition: service_completed_successfully
+      resume-seaweedfs-bucket:
+        condition: service_completed_successfully
 
 networks:
   home_network:
