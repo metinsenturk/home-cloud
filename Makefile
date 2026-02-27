@@ -428,15 +428,29 @@ down-resume:
 		--env-file apps/resume/.env \
 		-f apps/resume/docker-compose.yml down
 
+.PHONY: up-yopass
+up-yopass: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/yopass/.env \
+		-f apps/yopass/docker-compose.yml up -d
+
+.PHONY: down-yopass
+down-yopass:
+	docker compose \
+		--env-file .env \
+		--env-file apps/yopass/.env \
+		-f apps/yopass/docker-compose.yml down
+
 
 # =============================================================
 # Aggregate Commands
 # =============================================================
 
 .PHONY: up-all
-up-all: up-traefik up-dozzle up-wud up-infra-postgres up-infra-mssql up-infra-mongodb up-infisical up-beszel up-coder up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-mailpit up-portracker up-gitlab up-pgadmin up-pgbackweb up-redash up-vscode up-openclaw up-uptime-kuma up-resume
+up-all: up-traefik up-dozzle up-wud up-infra-postgres up-infra-mssql up-infra-mongodb up-infisical up-beszel up-coder up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-mailpit up-portracker up-gitlab up-pgadmin up-pgbackweb up-redash up-vscode up-openclaw up-uptime-kuma up-resume up-yopass
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-resume down-uptime-kuma down-openclaw down-vscode down-redash down-pgbackweb down-pgadmin down-gitlab down-portracker down-mailpit down-memos down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-coder down-beszel down-infisical down-infra-mongodb down-infra-mssql down-infra-postgres down-wud down-dozzle down-traefik
+down-all: down-yopass down-resume down-uptime-kuma down-openclaw down-vscode down-redash down-pgbackweb down-pgadmin down-gitlab down-portracker down-mailpit down-memos down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-coder down-beszel down-infisical down-infra-mongodb down-infra-mssql down-infra-postgres down-wud down-dozzle down-traefik
 	@echo "All services stopped."

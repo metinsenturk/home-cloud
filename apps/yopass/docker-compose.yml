@@ -1,0 +1,52 @@
+services:
+  yopass:
+    image: jhaals/yopass:latest
+    container_name: yopass
+    restart: unless-stopped
+    networks:
+      - home_network
+      - home_yopass_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.yopass.rule=Host(`yopass.${DOMAIN}`)"
+      - "traefik.http.services.yopass.loadbalancer.server.port=1337"
+      - "traefik.docker.network=home_network"
+    environment:
+      TZ: ${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1337/"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      yopass-memcached:
+        condition: service_healthy
+
+  yopass-memcached:
+    image: memcached:latest
+    container_name: yopass_memcached
+    restart: unless-stopped
+    networks:
+      - home_yopass_network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/11211 || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  home_network:
+    external: true
+  home_yopass_network:
+    name: home_yopass_network
+    driver: bridge
