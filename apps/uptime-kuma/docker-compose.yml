@@ -1,0 +1,34 @@
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    container_name: uptime-kuma
+    restart: unless-stopped
+    networks:
+      - home_network
+    volumes:
+      - home_uptime_kuma_data:/app/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.uptime-kuma.rule=Host(`kuma.${DOMAIN}`)"
+      - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
+      - "traefik.docker.network=home_network"
+    environment:
+      - TZ=${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  home_network:
+    external: true
+
+volumes:
+  home_uptime_kuma_data:
+    name: home_uptime_kuma_data
