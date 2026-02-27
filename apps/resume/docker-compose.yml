@@ -114,6 +114,12 @@ services:
       - S3_BUCKET=reactive-resume
       - S3_FORCE_PATH_STYLE=true
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SMTP_HOST=${HOME_CLOUD_SMTP_HOST}
+      - SMTP_PORT=${HOME_CLOUD_SMTP_PORT}
+      - SMTP_USER=${HOME_CLOUD_SMTP_USERNAME}
+      - SMTP_PASS=${HOME_CLOUD_SMTP_PASSWORD}
+      - SMTP_FROM=${HOME_CLOUD_SMTP_FROM_NAME} <${HOME_CLOUD_SMTP_FROM_EMAIL}>
+      - SMTP_SECURE=${HOME_CLOUD_SMTP_SECURE}
     logging:
       driver: json-file
       options:

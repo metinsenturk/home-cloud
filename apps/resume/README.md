@@ -72,6 +72,23 @@ All app-specific variables must be set in the local `.env` file before starting:
 | `RESUME_BROWSERLESS_TOKEN` | Local | resume-browserless, resume | - | Token for securing browserless service access |
 | `RESUME_S3_ACCESS_KEY` | Local | resume-seaweedfs, resume | `seaweedfs` | S3-compatible storage access key |
 | `RESUME_S3_SECRET_KEY` | Local | resume-seaweedfs, resume | `seaweedfs` | S3-compatible storage secret key |
+| `HOME_CLOUD_SMTP_HOST` | Global | resume | - | SMTP server hostname for sending emails |
+| `HOME_CLOUD_SMTP_PORT` | Global | resume | `587` | SMTP server port (587 for STARTTLS, 465 for TLS) |
+| `HOME_CLOUD_SMTP_USERNAME` | Global | resume | - | SMTP authentication username |
+| `HOME_CLOUD_SMTP_PASSWORD` | Global | resume | - | SMTP authentication password |
+| `HOME_CLOUD_SMTP_FROM_EMAIL` | Global | resume | - | Default "From" email address for outgoing emails |
+| `HOME_CLOUD_SMTP_FROM_NAME` | Global | resume | `Home Cloud` | Default "From" name for outgoing emails |
+| `HOME_CLOUD_SMTP_SECURE` | Global | resume | `false` | TLS mode: `false` for STARTTLS, `true` for implicit TLS |
+
+### Email Features
+
+Email notifications are used for:
+- Password reset requests
+- Account verification emails
+- Two-factor authentication codes
+- Resume sharing notifications
+
+**Note**: All SMTP variables must be configured in the root `.env` file for email functionality to work. If any SMTP variable is missing, email sending will be disabled and messages will be logged to the console instead.
 
 ## Volumes & Networks
 
