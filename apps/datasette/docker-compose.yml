@@ -1,0 +1,45 @@
+services:
+  datasette:
+    image: datasetteproject/datasette:latest
+    container_name: datasette
+    restart: unless-stopped
+    networks:
+      - home_network
+      - home_datasette_network
+    volumes:
+      # Persist SQLite databases and related files served by Datasette.
+      - home_datasette_data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.datasette.rule=Host(`${DATASETTE_SUBDOMAIN}.${DATASETTE_DOMAIN}`)"
+      - "traefik.http.services.datasette.loadbalancer.server.port=8001"
+      - "traefik.docker.network=home_network"
+    environment:
+      # Keep a stable secret so signed cookies remain valid across restarts.
+      - DATASETTE_SECRET=${DATASETTE_SECRET}
+    # Datasette defaults to localhost, so we explicitly bind to 0.0.0.0 for Traefik reachability.
+    command: ["datasette", "serve", "/data", "--host", "0.0.0.0", "--port", "8001", "--setting", "default_allow_sql", "off"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      # Use Python stdlib HTTP probe to avoid assuming curl/wget availability in the image.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/-/versions.json', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    env_file:
+      - .env
+
+networks:
+  home_network:
+    external: true
+  home_datasette_network:
+    name: home_datasette_network
+    driver: bridge
+
+volumes:
+  home_datasette_data:
+    name: home_datasette_data
