@@ -32,6 +32,31 @@ make up-datasette
 - Optional secret generation command:
   - `python -c "import secrets; print(secrets.token_hex(32))"`
 
+## Database Seeding
+
+To create an example database with sample data:
+
+**Using the provided scripts (Linux/WSL):**
+```bash
+cd apps/datasette
+chmod +x seed.sh
+./seed.sh
+```
+
+**Manual execution:**
+```bash
+cd apps/datasette
+docker cp seed_database.py datasette:/tmp/seed_database.py
+docker exec datasette python3 /tmp/seed_database.py
+docker exec datasette rm -f /tmp/seed_database.py
+```
+
+The seeding script creates:
+- `people` table: Sample users with name, role, and city
+- `projects` table: Sample projects with status and owner (FK to people)
+
+Access the example database at: `http://datasette.${DOMAIN}/example`
+
 ## Environment Variables
 
 | Variable Name | Source | Service | Default/Example Value | Description |
