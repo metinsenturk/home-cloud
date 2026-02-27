@@ -32,6 +32,9 @@ make up-blinko
    - `BLINKO_DB_USER`: PostgreSQL database user (default: `postgres`)
    - `BLINKO_DB_PASSWORD`: Secure password for PostgreSQL database
    - `BLINKO_NEXTAUTH_SECRET`: Generate using `openssl rand -hex 32` (64 characters recommended)
+   - `BLINKO_OPENAI_API_KEY`: (Optional) OpenAI API key for GPT models
+   - `BLINKO_GEMINI_API_KEY`: (Optional) Google Gemini API key
+   - `BLINKO_OPENROUTER_API_KEY`: (Optional) OpenRouter API key for multi-model access
 
 2. **First-Time Setup**: 
    - After starting the containers, navigate to `http://blinko.${DOMAIN}`
@@ -50,6 +53,9 @@ make up-blinko
 | `BLINKO_DB_USER` | Local | blinko-db, blinko | postgres | PostgreSQL database user |
 | `BLINKO_DB_PASSWORD` | Local | blinko-db, blinko | N/A | PostgreSQL database password |
 | `BLINKO_NEXTAUTH_SECRET` | Local | blinko | N/A | NextAuth.js secret for session encryption (64+ chars) |
+| `BLINKO_OPENAI_API_KEY` | Local | blinko | (optional) | OpenAI API key for GPT models |
+| `BLINKO_GEMINI_API_KEY` | Local | blinko | (optional) | Google Gemini API key |
+| `BLINKO_OPENROUTER_API_KEY` | Local | blinko | (optional) | OpenRouter API key for multi-model access |
 | `TZ` | Global | Both | UTC | Timezone setting |
 | `DOMAIN` | Global | blinko | localhost | Base domain for URL construction |
 
