@@ -55,6 +55,9 @@ USER_DATA_DIR = Path("/freqtrade/user_data")
 STRATEGIES_DIR = USER_DATA_DIR / "strategies"  # Destination: container's strategy directory
 TEMP_DIR = Path("/tmp")  # Temporary extraction directory
 
+# Feature flags
+FORCE_DOWNLOAD_STRATEGIES = False  # Set to True to force re-download and overwrite existing strategies
+
 # Log prefix for this module
 LOG_PREFIX = "[strategy-downloader]"
 
@@ -254,18 +257,26 @@ def download_strategies() -> bool:
     Download official freqtrade strategies from GitHub via ZIP file.
     
     Orchestrates the complete strategy download workflow:
-        1. Check if strategies already exist (skip if they do)
+        1. Check if strategies already exist (skip if they do, unless FORCE_DOWNLOAD_STRATEGIES=True)
         2. Download the freqtrade-strategies repository as ZIP from GitHub
         3. Extract the ZIP file to a temporary directory
         4. Copy strategy files to the user_data/strategies directory
         5. Clean up temporary files
     
+    The FORCE_DOWNLOAD_STRATEGIES flag bypasses the existence check and forces
+    re-download and overwrite of all strategies (useful for updating strategies).
+    
     Returns:
         True if successful or skipped (strategies exist), False on error
     """
-    # Check if strategies already exist
-    if check_existing_strategies():
+    # Check if strategies already exist (unless forced)
+    if not FORCE_DOWNLOAD_STRATEGIES and check_existing_strategies():
+        log("Skipping download (use FORCE_DOWNLOAD_STRATEGIES=True to re-download)")
         return True
+    
+    # If forcing download, log it
+    if FORCE_DOWNLOAD_STRATEGIES:
+        log("Force re-download enabled. Overwriting existing strategies...")
     
     log("Downloading official freqtrade strategies...")
     
