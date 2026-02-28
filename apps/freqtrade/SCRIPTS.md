@@ -1,6 +1,6 @@
 # Custom Scripts and Automation
 
-This Freqtrade deployment includes two custom automation scripts mounted in the container:
+This Freqtrade deployment includes runtime and host-side helper scripts:
 
 ## 1. entrypoint.py
 

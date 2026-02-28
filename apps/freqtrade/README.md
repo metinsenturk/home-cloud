@@ -8,7 +8,7 @@ A free and open source crypto trading bot written in Python. Freqtrade allows yo
 
 | Service | Role | Port | Network |
 |---------|------|------|---------|
-| `freqtrade` | Trading bot with REST API and FreqUI web interface | 8080 | `home_network` (public via Traefik) + `home_freqtrade_network` (private, reserved for future use) |
+| `freqtrade` | Trading bot with REST API and FreqUI web interface | 8080 | `home_network` (public via Traefik) + `home_freqtrade_network` (private internal app network) |
 | `freqtrade-postgres` | Optional PostgreSQL backend for trade data (enabled via PostgreSQL compose override) | 5432 (internal) | `home_freqtrade_network` (private, not exposed via Traefik) |
 
 ## Access
@@ -75,7 +75,7 @@ This Freqtrade deployment includes three helper scripts:
 2. **strategy_downloader.py** - Optionally downloads official freqtrade strategies from GitHub
 3. **check_database.py** - Verifies active database backend and runs health/data checks
 
-**For complete documentation on both scripts**, including:
+**For complete documentation on all scripts**, including:
 - How to customize each script
 - How to toggle strategy downloads
 - Initialization flow diagram

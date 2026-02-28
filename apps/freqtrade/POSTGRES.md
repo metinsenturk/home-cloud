@@ -55,8 +55,8 @@ The setup uses Docker Compose's multiple file feature:
 
 ```bash
 docker compose \
-  -f docker-compose.yml \              # Base config (SQLite)
-  -f docker-compose.postgres.yml \     # PostgreSQL overrides
+   -f docker-compose.yml \
+   -f docker-compose.postgres.yml \
   up -d
 ```
 
@@ -79,7 +79,7 @@ When you run `make up-freqtrade-postgres` for the first time:
 1. **Image Build** (~30-60 seconds)
    - Pulls `freqtradeorg/freqtrade:latest`
    - Installs `psycopg2-binary`
-   - Creates custom image `freqtrade-freqtrade` locally
+   - Creates a local custom image for the `freqtrade` service
 
 2. **PostgreSQL Initialization** (~10 seconds)
    - Creates `home_freqtrade_postgres_data` volume

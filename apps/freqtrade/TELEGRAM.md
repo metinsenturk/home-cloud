@@ -59,8 +59,11 @@ FREQTRADE_TELEGRAM_CHAT_ID=987654321
 ### 4. Restart the Bot
 
 ```bash
-# From the root folder
+# SQLite mode
 make down-freqtrade && make up-freqtrade
+
+# PostgreSQL mode
+make down-freqtrade-postgres && make up-freqtrade-postgres
 ```
 
 Once restarted, your bot will start sending Telegram notifications.
@@ -109,7 +112,11 @@ Bot: Total Profit: +5.25%
    ```
 4. **Restart the bot** if you made changes to `.env`:
    ```bash
+   # SQLite mode
    make down-freqtrade && make up-freqtrade
+
+   # PostgreSQL mode
+   make down-freqtrade-postgres && make up-freqtrade-postgres
    ```
 
 ### No Messages Appearing
