@@ -47,6 +47,7 @@ teardown() {
 }
 
 @test "up-base starts base containers and down-base removes them" {
+  [ "${RUN_INTEGRATION_TIER}" = "full" ] || skip "Slow lifecycle test (use RUN_INTEGRATION_TIER=full)"
   require_containers_absent_or_skip traefik dozzle wud
 
   run run_make_repo up-base
@@ -74,6 +75,7 @@ teardown() {
 }
 
 @test "recreate-base recovers base stack and reports completion" {
+  [ "${RUN_INTEGRATION_TIER}" = "full" ] || skip "Slow lifecycle test (use RUN_INTEGRATION_TIER=full)"
   require_containers_absent_or_skip traefik dozzle wud
 
   run run_make_repo recreate-base

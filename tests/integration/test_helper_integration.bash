@@ -19,6 +19,12 @@ integration_setup_common() {
   export INTEGRATION_TEST_TIMEOUT=${INTEGRATION_TEST_TIMEOUT:-180}
   export INTEGRATION_TEST_TIMEOUT_SLOW=${INTEGRATION_TEST_TIMEOUT_SLOW:-300}
 
+  # Test tier stratification for performance tuning.
+  # quick: Sanity checks only (check-validity, network) - ~30-60s total
+  # full:  Deep lifecycle testing (startup, healthcheck, teardown) - 3-5 minutes
+  # Default: quick (recommend full in CI)
+  export RUN_INTEGRATION_TIER=${RUN_INTEGRATION_TIER:-quick}
+
   if [[ "${RUN_INTEGRATION:-0}" != "1" ]]; then
     skip "Integration tests are disabled. Run with RUN_INTEGRATION=1."
   fi

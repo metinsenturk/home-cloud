@@ -59,8 +59,10 @@
 #   make up-base                     # Launches base services (Traefik, Dozzle, WUD)
 #   make up-all                      # Launches all services
 #   make test-makefile               # Runs unit-like tests for Makefile commands
-#   make test-makefile-integration   # Runs real-docker integration tests (opt-in)
-#   make test-makefile-all           # Runs unit + integration tests
+#   make test-makefile-integration   # Runs integration tests (quick tier, ~30-60s)
+#   make test-makefile-integration-quick  # Explicit quick tier: network, compose validation
+#   make test-makefile-integration-full   # Full tier: app lifecycle tests (3-5 minutes)
+#   make test-makefile-all           # Runs unit + integration (quick tier by default)
 #   make list-groups                 # Lists available custom app groups
 #   make init-groups                 # Creates group config file from example
 #   make clean-groups                # Removes group config file
@@ -156,9 +158,14 @@ test-makefile:
 	@bats tests/*.bats
 
 .PHONY: test-makefile-integration
-test-makefile-integration:
-	@# Runs integration tests against real Docker resources.
-	@# Safety: requires explicit opt-in to avoid disrupting active local stacks.
+test-makefile-integration: test-makefile-integration-quick
+	@# Integration tests default to quick tier for fast feedback.
+	@# Use 'make test-makefile-integration-full' for deep lifecycle tests.
+
+.PHONY: test-makefile-integration-quick
+test-makefile-integration-quick:
+	@# Quick sanity checks (check-validity, network creation)
+	@# Runtime: ~30-60 seconds total
 	@if ! command -v bats > /dev/null 2>&1; then \
 		echo "✗ Error: bats is required. Install bats-core to run tests."; \
 		echo "  Ubuntu/WSL: sudo apt-get install -y bats"; \
@@ -166,10 +173,26 @@ test-makefile-integration:
 	fi
 	@if [ "$(RUN_INTEGRATION)" != "1" ]; then \
 		echo "✗ Error: integration tests are opt-in."; \
-		echo "  Run: make test-makefile-integration RUN_INTEGRATION=1"; \
+		echo "  Run: make test-makefile-integration-quick RUN_INTEGRATION=1"; \
 		exit 1; \
 	fi
-	@RUN_INTEGRATION=1 bats tests/integration/*.bats
+	@RUN_INTEGRATION=1 RUN_INTEGRATION_TIER=quick bats tests/integration/*.bats
+
+.PHONY: test-makefile-integration-full
+test-makefile-integration-full:
+	@# Full integration testing including app lifecycle (startup, healthcheck, teardown)
+	@# Runtime: 3-5 minutes depending on system and container startup times
+	@if ! command -v bats > /dev/null 2>&1; then \
+		echo "✗ Error: bats is required. Install bats-core to run tests."; \
+		echo "  Ubuntu/WSL: sudo apt-get install -y bats"; \
+		exit 1; \
+	fi
+	@if [ "$(RUN_INTEGRATION)" != "1" ]; then \
+		echo "✗ Error: integration tests are opt-in."; \
+		echo "  Run: make test-makefile-integration-full RUN_INTEGRATION=1"; \
+		exit 1; \
+	fi
+	@RUN_INTEGRATION=1 RUN_INTEGRATION_TIER=full bats tests/integration/*.bats
 
 .PHONY: test-makefile-all
 test-makefile-all: test-makefile

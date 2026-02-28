@@ -36,6 +36,7 @@ teardown() {
 # Single compose file with app-specific .env (most common pattern).
 
 @test "blinko (simple) lifecycle: check-validity → up → wait healthy → down → verify removed" {
+  [ "${RUN_INTEGRATION_TIER}" = "full" ] || skip "Slow app lifecycle test (use RUN_INTEGRATION_TIER=full)"
   export INTEGRATION_CURRENT_APP="blinko"
   require_containers_absent_or_skip blinko
 
@@ -81,6 +82,7 @@ teardown() {
 # naming conventions. They have database-specific healthchecks.
 
 @test "infra-postgres (infrastructure) lifecycle: up → wait healthy → down → verify removed" {
+  [ "${RUN_INTEGRATION_TIER}" = "full" ] || skip "Slow app lifecycle test (use RUN_INTEGRATION_TIER=full)"
   export INTEGRATION_CURRENT_APP="infra-postgres"
   require_containers_absent_or_skip infra_postgres
 
@@ -127,6 +129,7 @@ teardown() {
 }
 
 @test "freqtrade-postgres (multi-file) lifecycle: up → wait healthy → down → verify removed" {
+  [ "${RUN_INTEGRATION_TIER}" = "full" ] || skip "Slow app lifecycle test (use RUN_INTEGRATION_TIER=full)"
   export INTEGRATION_CURRENT_APP="freqtrade-postgres"
   require_containers_absent_or_skip freqtrade
 
@@ -166,6 +169,7 @@ teardown() {
 # Explicit build command with custom flags (used for image customization).
 
 @test "freqtrade build-freqtrade succeeds and rebuilds image" {
+  [ "${RUN_INTEGRATION_TIER}" = "full" ] || skip "Slow build test (use RUN_INTEGRATION_TIER=full)"
   require_containers_absent_or_skip freqtrade
 
   # Explicit build command (no container start, just image build)

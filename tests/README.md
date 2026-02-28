@@ -53,14 +53,32 @@ make test-makefile
 
 ### Integration tests (real Docker, opt-in)
 
+**Quick tier (default):** Fast sanity checks - network creation, compose validation (~30-60s)
+
 ```bash
-RUN_INTEGRATION=1 bats tests/integration/*.bats
+RUN_INTEGRATION=1 make test-makefile-integration
 ```
 
-or
+or equivalently:
 
 ```bash
-make test-makefile-integration RUN_INTEGRATION=1
+RUN_INTEGRATION=1 make test-makefile-integration-quick
+```
+
+**Full tier:** Complete app lifecycle tests - startup, healthcheck validation, teardown (3-5 minutes)
+
+```bash
+RUN_INTEGRATION=1 make test-makefile-integration-full
+```
+
+Direct bats invocation with tier control:
+
+```bash
+# Quick tier only
+RUN_INTEGRATION=1 RUN_INTEGRATION_TIER=quick bats tests/integration/*.bats
+
+# Full tier (app lifecycle tests)
+RUN_INTEGRATION=1 RUN_INTEGRATION_TIER=full bats tests/integration/*.bats
 ```
 
 ### Configuring Integration Test Timeouts
@@ -81,15 +99,27 @@ INTEGRATION_TEST_TIMEOUT=300 INTEGRATION_TEST_TIMEOUT_SLOW=600 \
 
 ### All tests
 
+Run unit tests only (default, fast):
+
 ```bash
 make test-makefile-all
 ```
 
-Enable integration layer during all-tests run:
+Run unit tests + integration quick tier (recommended for local development):
 
 ```bash
-make test-makefile-all RUN_INTEGRATION=1
+RUN_INTEGRATION=1 make test-makefile-all
 ```
+
+Run everything including full integration tier (recommended for CI):
+
+```bash
+RUN_INTEGRATION=1 RUN_INTEGRATION_TIER=full make test-makefile-all
+```
+
+**Tier selection guide:**
+- **Quick** (default): Fast feedback loop, safe to run locally anytime
+- **Full** (opt-in): Complete validation, run before merging or in CI pipelines
 
 ## Test Files
 
