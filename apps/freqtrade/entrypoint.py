@@ -2,12 +2,33 @@
 """
 Freqtrade entrypoint initialization script.
 
-Automatically initializes freqtrade user directory and config on first start.
-If config.json is missing, this script:
-  1. Creates the user directory structure
+This script overrides the freqtradeorg/freqtrade image's default entrypoint to add
+automated initialization on first start. The Docker container execution flow is:
+
+  1. Docker starts the container
+  2. entrypoint: python3 /entrypoint.py  (this script runs)
+  3. This script receives all command args via sys.argv
+  4. Script checks if config.json exists; if not, initializes it
+  5. Script then launches freqtrade with the original command args via subprocess.run()
+
+Why override the entrypoint?
+  - The freqtradeorg/freqtrade image expects config.json to exist before starting
+  - It does NOT auto-initialize on first run (you must manually run create-userdir + new-config)
+  - This script automates that process, so the container "just works" on first start
+
+How it works:
+  - docker-compose.yml has TWO fields:
+      entrypoint: python3 /entrypoint.py          <- Replaces image's default entrypoint
+      command: freqtrade trade --config ...       <- Passed as arguments to entrypoint
+  - Docker merges them: python3 /entrypoint.py freqtrade trade --config ...
+  - This script receives them via sys.argv[1:]
+  - After initialization, script runs: subprocess.run(['freqtrade', 'trade', '--config', ...])
+
+Automatically initializes freqtrade on first start:
+  1. Creates the user directory structure (strategies/, backtest_results/, data/, logs/)
   2. Generates a new config.json with defaults
-  3. Updates the exchange from binance to kraken (avoids geo-restrictions)
-  4. Launches the freqtrade trading bot
+  3. Updates the exchange from binance to kraken (avoids HTTP 451 geo-restrictions)
+  4. Launches the freqtrade trading bot with provided arguments
 
 Usage:
     python3 /entrypoint.py [freqtrade_args...]
@@ -15,6 +36,10 @@ Usage:
 Example in docker-compose.yml:
     entrypoint: python3 /entrypoint.py
     command: freqtrade trade --config user_data/config.json --strategy SampleStrategy
+    
+Example in docker run:
+    docker run freqtradeorg/freqtrade:latest \
+      python3 /entrypoint.py freqtrade show-config
 """
 
 import subprocess
@@ -174,23 +199,46 @@ def main() -> int:
     """
     Main entry point: initialize config if needed, then launch freqtrade.
     
+    Architecture explanation:
+    -------------------------
+    This function handles the entrypoint override that allows freqtrade to auto-initialize.
+    
+    When docker-compose.yml has:
+        entrypoint: python3 /entrypoint.py
+        command: freqtrade trade --config user_data/config.json --strategy SampleStrategy
+    
+    Docker merges them into a single command:
+        python3 /entrypoint.py freqtrade trade --config user_data/config.json --strategy SampleStrategy
+    
+    So this script receives:
+        sys.argv[0] = '/entrypoint.py'
+        sys.argv[1:] = ['freqtrade', 'trade', '--config', 'user_data/config.json', '--strategy', 'SampleStrategy']
+    
+    We then:
+        1. Call initialize_if_needed() to set up config if missing
+        2. Extract sys.argv[1:] which contains the original freqtrade command + args
+        3. Launch freqtrade using subprocess.run() with those args
+        4. Return freqtrade's exit code to Docker
+    
     Returns:
-        Exit code from freqtrade process
+        Exit code from freqtrade process (0 = success, non-zero = error)
     """
     initialize_if_needed()
     
-    # Build freqtrade command from remaining arguments
+    # Extract freqtrade command and args that were passed to this script
+    # sys.argv[1:] contains everything after 'python3 /entrypoint.py'
     log("Starting freqtrade...")
-    cmd = sys.argv[1:]  # All args passed to this script
+    cmd = sys.argv[1:]  # All args passed to this script via docker-compose command
     
     if not cmd:
         log("Error: No freqtrade command provided. Use: python3 /entrypoint.py freqtrade [args...]")
         return 1
     
     try:
-        # Replace this process with freqtrade (exec-style)
+        # Launch the freqtrade binary with the command and args we received
+        # subprocess.run() waits for freqtrade to exit and captures its exit code
         result = subprocess.run(cmd, check=False)
-        return result.returncode
+        return result.returncode  # Return freqtrade's exit code to Docker
     except Exception as e:
         log(f"Error launching freqtrade: {e}")
         return 1

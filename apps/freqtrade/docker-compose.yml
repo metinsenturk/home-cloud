@@ -31,6 +31,8 @@ services:
       - home_freqtrade_network
     volumes:
       - home_freqtrade_data:/freqtrade/user_data
+      # Mount entrypoint.py script (read-only) to override image's default entrypoint
+      # This allows automatic initialization of config.json on first start
       - ./entrypoint.py:/entrypoint.py:ro
     labels:
       - "traefik.enable=true"
@@ -62,11 +64,29 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    # depends_on:
-    #   freqtrade-postgres:
-    #     condition: service_healthy
+    # === ENTRYPOINT OVERRIDE MECHANISM ===
+    # The image's default entrypoint is freqtrade. We override it with our Python script.
+    # Docker combines entrypoint + command into a single invocation:
+    #   entrypoint: python3 /entrypoint.py
+    #   command: freqtrade trade --config ...
+    # Results in: python3 /entrypoint.py freqtrade trade --config ...
+    #
+    # Flow:
+    #   1. entrypoint.py starts (this script)
+    #   2. It receives sys.argv[1:] = ['freqtrade', 'trade', '--config', ...]
+    #   3. Script checks if config.json exists; if not, auto-initializes it
+    #   4. Script then launches freqtrade: subprocess.run(['freqtrade', 'trade', '--config', ...])
+    #   5. freqtrade runs with the initialized config
+    #
+    # Why override?
+    #   - The freqtradeorg/freqtrade image doesn't auto-initialize on first start
+    #   - Without this, you'd manually need to run: create-userdir + new-config + start
+    #   - This automation makes the container "just work" on first launch
     entrypoint: python3 /entrypoint.py
     command: freqtrade trade --config user_data/config.json --strategy SampleStrategy
+    # depends_on:
+    #   freqtrade-postgres:
+    #     condition: service_healthy    
 
 networks:
   home_network:
