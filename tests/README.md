@@ -8,7 +8,8 @@ This directory contains both:
 
 - `bash`
 - `make`
-- `bats` (bats-core)
+- `bats` (bats-core) - required
+- `GNU parallel` or `rush` (optional) - for parallel test execution with `--jobs` flag
 
 ## Install bats (bats-core)
 
@@ -36,6 +37,31 @@ npm install -g bats
 ```bash
 bats --version
 ```
+
+## Install GNU parallel (optional - for parallel test execution)
+
+For parallel test execution in CI pipelines (faster quick tier testing), install `GNU parallel`:
+
+### Ubuntu / WSL
+
+```bash
+sudo apt-get update
+sudo apt-get install -y parallel
+```
+
+### macOS (Homebrew)
+
+```bash
+brew install parallel
+```
+
+### Verify install
+
+```bash
+parallel --version
+```
+
+If `GNU parallel` is not installed, `BATS_PARALLEL=1` or `--jobs` flag will be silently ignored and tests run sequentially (no error).
 
 ## Run tests
 
@@ -154,6 +180,66 @@ RUN_INTEGRATION=1 RUN_INTEGRATION_TIER=full make test-makefile-all
 **Tier selection guide:**
 - **Quick** (default): Fast feedback loop, safe to run locally anytime
 - **Full** (opt-in): Complete validation, run before merging or in CI pipelines
+
+### Parallel Test Execution (CI Optimization)
+
+For faster test feedback in CI pipelines, parallel execution can be used selectively. Requires `GNU parallel` installed (or `rush`).
+
+**Prerequisites for parallel execution:**
+
+```bash
+# Install GNU parallel for --jobs support
+sudo apt-get install -y parallel  # Ubuntu/WSL
+# or
+brew install parallel  # macOS
+```
+
+If `GNU parallel` is not installed, `BATS_PARALLEL=1` will be silently ignored and tests run sequentially.
+
+**Unit-like tests (sequential recommended for current setup):**
+
+Currently the unit-like tests have setup/teardown logic that doesn't safely parallelize. Sequential execution is recommended:
+
+```bash
+make test-makefile  # Sequential, safe, ~15-20s
+```
+
+**Integration quick tier (safe to parallelize - sanity checks only):**
+
+Quick tier tests are independent sanity checks with no container lifecycle, making them safe to run in parallel:
+
+```bash
+# Run 2 jobs in parallel for quick sanity checks
+BATS_PARALLEL=1 RUN_INTEGRATION=1 make test-makefile-integration-quick
+```
+
+**⚠️ Integration full tier (NOT recommended for parallel execution):**
+
+Full integration tests with container lifetimes are **not safe to parallelize** due to:
+- Shared Docker daemon and containers (port conflicts)
+- Resource contention (memory/CPU for multiple concurrent startups)
+- Healthcheck synchronization issues
+
+```bash
+# DON'T do this (will cause timeouts or conflicts):
+# BATS_PARALLEL=1 RUN_INTEGRATION=1 make test-makefile-integration-full
+
+# DO run full tier sequentially:
+RUN_INTEGRATION=1 make test-makefile-integration-full
+```
+
+**CI Pipeline Recommended:**
+
+```bash
+# Sequential unit tests (safe, ~15-20s)
+make test-makefile
+
+# Quick integration sanity checks in parallel (safe, ~30-60s)
+BATS_PARALLEL=1 RUN_INTEGRATION=1 make test-makefile-integration-quick
+
+# Full integration sequentially (deep validation, 3-5 minutes)
+RUN_INTEGRATION=1 RUN_INTEGRATION_TIER=full make test-makefile-integration-full
+```
 
 ## Test Files
 

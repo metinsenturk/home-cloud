@@ -31,6 +31,13 @@ integration_setup_common() {
   # Usage: INTEGRATION_TIMING_REPORT=1 make test-makefile-integration-full
   export INTEGRATION_TIMING_REPORT=${INTEGRATION_TIMING_REPORT:-0}
 
+  # Parallel test execution for CI pipelines.
+  # Note: Integration tests with container lifecycles are NOT safe to parallelize.
+  # Use BATS_PARALLEL=1 only for quick tier (sanity checks, network creation).
+  # Unit-like tests are safe to parallelize (disjoint temp workspaces).
+  # Usage: BATS_PARALLEL=1 make test-makefile
+  #        BATS_PARALLEL=1 make test-makefile-integration-quick
+
   if [[ "${RUN_INTEGRATION:-0}" != "1" ]]; then
     skip "Integration tests are disabled. Run with RUN_INTEGRATION=1."
   fi
@@ -49,6 +56,12 @@ integration_setup_common() {
 
   if [ ! -f "$INTEGRATION_REPO_ROOT/.env" ]; then
     skip "Root .env file is required for integration tests"
+  fi
+
+  # Validate parallel execution safety
+  if [ "${RUN_INTEGRATION_TIER}" = "full" ] && [[ " $* " =~ " --jobs " ]]; then
+    echo "⚠️  WARNING: Full integration tests should not run in parallel (container resource contention)." >&2
+    echo "    Recommended: BATS_PARALLEL=1 only for quick tier or unit tests." >&2
   fi
 }
 

@@ -155,7 +155,8 @@ test-makefile:
 		echo "  Ubuntu/WSL: sudo apt-get install -y bats"; \
 		exit 1; \
 	fi
-	@bats tests/*.bats
+	@BATS_JOBS=$$([ "$(BATS_PARALLEL)" = "1" ] && echo "--jobs 4" || echo ""); \
+	bats $$BATS_JOBS tests/*.bats
 
 .PHONY: test-makefile-integration
 test-makefile-integration: test-makefile-integration-quick
@@ -176,7 +177,8 @@ test-makefile-integration-quick:
 		echo "  Run: make test-makefile-integration-quick RUN_INTEGRATION=1"; \
 		exit 1; \
 	fi
-	@RUN_INTEGRATION=1 RUN_INTEGRATION_TIER=quick bats tests/integration/*.bats
+	@BATS_JOBS=$$([ "$(BATS_PARALLEL)" = "1" ] && echo "--jobs 2" || echo ""); \
+	RUN_INTEGRATION=1 RUN_INTEGRATION_TIER=quick bats $$BATS_JOBS tests/integration/*.bats
 
 .PHONY: test-makefile-integration-full
 test-makefile-integration-full:
@@ -192,7 +194,8 @@ test-makefile-integration-full:
 		echo "  Run: make test-makefile-integration-full RUN_INTEGRATION=1"; \
 		exit 1; \
 	fi
-	@RUN_INTEGRATION=1 RUN_INTEGRATION_TIER=full bats tests/integration/*.bats
+	@BATS_JOBS=$$([ "$(BATS_PARALLEL)" = "1" ] && echo "--jobs 2" || echo ""); \
+	RUN_INTEGRATION=1 RUN_INTEGRATION_TIER=full bats $$BATS_JOBS tests/integration/*.bats
 
 .PHONY: test-makefile-all
 test-makefile-all: test-makefile
