@@ -156,6 +156,21 @@ make check-tools
 ```
 Displays status of required and optional dependencies.
 
+#### Install Optional Tools
+```bash
+make install-optional-tools
+```
+Installs optional dependencies used by this project:
+- `bats`/`bats-core`
+- `GNU parallel`
+- `yq`
+- `git`
+
+Package manager behavior:
+- Uses `apt-get` on Ubuntu/WSL
+- Uses `brew` on macOS
+- Runs `make check-tools` at the end to verify installation
+
 ---
 
 ### 🚀 Launching Services
@@ -530,10 +545,11 @@ brew install bats-core
 
 ```bash
 make init-env                     # Create .env from .env.example (one-time)
-make create-network              # Set up networking
-make up-base                     # Launch core services
-make up-blinko                   # Try launching an app
-make list-groups                 # Explore custom groups (if configured)
+make install-optional-tools       # Install optional tooling (bats, parallel, yq, git)
+make create-network               # Set up networking
+make up-base                      # Launch core services
+make up-blinko                    # Try launching an app
+make list-groups                  # Explore custom groups (if configured)
 ```
 
 📚 **Further Reading:**

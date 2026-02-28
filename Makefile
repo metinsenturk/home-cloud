@@ -56,6 +56,7 @@
 # Usage:
 #   make create-network              # Creates the home_network if it doesn't exist
 #   make init-env                    # Creates root .env from .env.example (one-time setup)
+#   make install-optional-tools      # Installs optional dependencies (bats, GNU parallel, yq, git)
 #   make check-validity APP=app_name # Validates a compose file for an app
 #   make check-tools                 # Checks for required and optional dependencies
 #   make up-base                     # Launches base services (Traefik, Dozzle, WUD)
@@ -162,6 +163,26 @@ check-tools:
 	fi
 	@echo ""
 	@echo "Tip: Install missing tools with: sudo apt-get install <tool>"
+
+.PHONY: install-optional-tools
+install-optional-tools:
+	@# Installs optional tooling for testing and group backends.
+	@# Supported package managers: apt-get (Ubuntu/WSL), brew (macOS).
+	@set -e; \
+	if command -v apt-get > /dev/null 2>&1; then \
+		echo "Detected apt-get. Installing optional tools: bats, GNU parallel, yq, git"; \
+		sudo apt-get update; \
+		sudo apt-get install -y bats parallel yq git; \
+	elif command -v brew > /dev/null 2>&1; then \
+		echo "Detected Homebrew. Installing optional tools: bats-core, GNU parallel, yq, git"; \
+		brew install bats-core parallel yq git; \
+	else \
+		echo "✗ Error: unsupported package manager."; \
+		echo "  Install optional tools manually: bats, parallel, yq, git"; \
+		exit 1; \
+	fi
+	@echo "✓ Optional tools installation complete."
+	@$(MAKE) check-tools
 
 .PHONY: create-network
 create-network:
