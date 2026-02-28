@@ -88,13 +88,19 @@ cd /path/to/home-cloud
 ```
 ⚠️ **All make commands MUST be run from the repository root directory.**
 
-### 2. Create the Shared Network
+### 2. Initialize Global Environment File
+```bash
+make init-env
+```
+Creates root `.env` from `.env.example` for first-time setup.
+
+### 3. Create the Shared Network
 ```bash
 make create-network
 ```
 This creates the `home_network` bridge that all services use to communicate.
 
-### 3. Launch Base Services
+### 4. Launch Base Services
 ```bash
 make up-base
 ```
@@ -103,14 +109,14 @@ This starts the foundational services:
 - **Dozzle** - Log viewer
 - **WUD** - What's Up Docker (update monitoring)
 
-### 4. Launch Individual Apps
+### 5. Launch Individual Apps
 ```bash
 make up-blinko      # Start Blinko app
 make up-jupyter     # Start Jupyter notebook
 make up-metabase    # Start Metabase analytics
 ```
 
-### 5. Stop Services When Done
+### 6. Stop Services When Done
 ```bash
 make down-blinko    # Stop specific app
 make down-base      # Stop base services
@@ -121,6 +127,16 @@ make down-base      # Stop base services
 ## Command Categories
 
 ### 🔧 Setup & Validation
+
+#### Initialize Global Environment
+```bash
+make init-env
+```
+Creates root `.env` from `.env.example`.
+
+Safety behavior:
+- Fails if `.env` already exists (prevents accidental secret overwrite)
+- Fails if `.env.example` is missing
 
 #### Create Shared Network
 ```bash
@@ -503,6 +519,7 @@ brew install bats-core
 ✅ **You're ready!** Try these commands:
 
 ```bash
+make init-env                     # Create .env from .env.example (one-time)
 make create-network              # Set up networking
 make up-base                     # Launch core services
 make up-blinko                   # Try launching an app

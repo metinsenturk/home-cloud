@@ -55,6 +55,7 @@
 #
 # Usage:
 #   make create-network              # Creates the home_network if it doesn't exist
+#   make init-env                    # Creates root .env from .env.example (one-time setup)
 #   make check-validity APP=app_name # Validates a compose file for an app
 #   make check-tools                 # Checks for required and optional dependencies
 #   make up-base                     # Launches base services (Traefik, Dozzle, WUD)
@@ -163,6 +164,21 @@ create-network:
 		docker network create $(NETWORK_NAME); \
 		echo "Network '$(NETWORK_NAME)' created."; \
 	fi
+
+.PHONY: init-env
+init-env:
+	@# Creates root .env from .env.example for first-time setup.
+	@# Fails if .env already exists to avoid accidental overwrite of secrets.
+	@if [ -f ".env" ]; then \
+		echo "✗ Error: .env already exists"; \
+		exit 1; \
+	fi
+	@if [ ! -f ".env.example" ]; then \
+		echo "✗ Error: .env.example not found"; \
+		exit 1; \
+	fi
+	@cp .env.example .env
+	@echo "✓ Created .env from .env.example"
 
 # =============================================================
 # Utilities
