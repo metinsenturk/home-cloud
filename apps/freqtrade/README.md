@@ -9,6 +9,7 @@ A free and open source crypto trading bot written in Python. Freqtrade allows yo
 | Service | Role | Port | Network |
 |---------|------|------|---------|
 | `freqtrade` | Trading bot with REST API and FreqUI web interface | 8080 | `home_network` (public via Traefik) + `home_freqtrade_network` (private, reserved for future use) |
+| `freqtrade-postgres` | Optional PostgreSQL backend for trade data (enabled via PostgreSQL compose override) | 5432 (internal) | `home_freqtrade_network` (private, not exposed via Traefik) |
 
 ## Access
 
@@ -29,6 +30,7 @@ docker compose --env-file ../../.env --env-file .env -f docker-compose.yml up -d
 
 ```bash
 make up-freqtrade
+```
 
 ### PostgreSQL Option:
 
@@ -46,7 +48,6 @@ See [POSTGRES.md](POSTGRES.md) for complete PostgreSQL setup documentation, incl
 - SQLite vs PostgreSQL comparison
 - Migration between databases
 - Troubleshooting
-```
 
 ## Automatic Initialization (Entrypoint Override)
 
@@ -68,10 +69,11 @@ This Freqtrade deployment uses a **custom Python entrypoint script** that automa
 
 ## Custom Scripts and Automation
 
-This Freqtrade deployment includes two custom automation scripts:
+This Freqtrade deployment includes three helper scripts:
 
 1. **entrypoint.py** - Handles automatic initialization on first start
 2. **strategy_downloader.py** - Optionally downloads official freqtrade strategies from GitHub
+3. **check_database.py** - Verifies active database backend and runs health/data checks
 
 **For complete documentation on both scripts**, including:
 - How to customize each script
@@ -79,6 +81,7 @@ This Freqtrade deployment includes two custom automation scripts:
 - Initialization flow diagram
 - Example logs from startup
 - Customization guide
+- Database check script usage and command breakdown (`docker exec`, `psql`, `sqlite3`)
 
 See [SCRIPTS.md](SCRIPTS.md)
 
@@ -111,6 +114,7 @@ user_data/
 ├── backtest_results/    # Backtesting output
 ├── data/                # Downloaded historical OHLCV data
 └── logs/                # Bot logs
+```
 
 ### Database Configuration
 
@@ -130,7 +134,6 @@ Freqtrade supports two database backends:
 - 📖 See [POSTGRES.md](POSTGRES.md) for complete setup guide
 
 Both options use the same entrypoint automation and configuration—only the database backend differs.
-```
 
 ### Important Environment Variables
 
@@ -138,6 +141,9 @@ These variables override `config.json` values and must be set in `.env`:
 
 | Variable | Purpose | Source | Required |
 |----------|---------|--------|----------|
+| `FREQTRADE_POSTGRES_USER` | PostgreSQL username | Local `.env` | Only if using PostgreSQL mode |
+| `FREQTRADE_POSTGRES_PASSWORD` | PostgreSQL password | Local `.env` | Only if using PostgreSQL mode |
+| `FREQTRADE_POSTGRES_DB` | PostgreSQL database name | Local `.env` | Only if using PostgreSQL mode |
 | `FREQTRADE_API_USERNAME` | FreqUI login username | Local `.env` | Yes |
 | `FREQTRADE_API_PASSWORD` | FreqUI login password | Local `.env` | Yes |
 | `FREQTRADE_JWT_SECRET` | JWT token secret for API authentication | Local `.env` | Yes |
@@ -147,7 +153,9 @@ These variables override `config.json` values and must be set in `.env`:
 | `FREQTRADE_TELEGRAM_CHAT_ID` | Your Telegram chat ID for notifications | Local `.env` | Only if Telegram enabled |
 | `DOMAIN` | Domain for Traefik routing | Global (root `.env`) | Yes |
 
-**Note**: Freqtrade uses SQLite by default (`sqlite:////freqtrade/user_data/tradesv3.sqlite`). No separate database service is required.
+**Notes**:
+- Default mode uses SQLite (`sqlite:////freqtrade/user_data/tradesv3.sqlite`) and does not require a separate DB service.
+- PostgreSQL mode (`make up-freqtrade-postgres`) uses `FREQTRADE_POSTGRES_*` variables from local `.env`.
 
 ### Configuring Trading Parameters
 
@@ -177,11 +185,12 @@ Freqtrade can send real-time trade notifications via Telegram. This allows you t
 | Volume | Purpose | Type |
 |--------|---------|------|
 | `home_freqtrade_data` | User data directory (strategies, config, logs, data, SQLite database) | Named |
+| `home_freqtrade_postgres_data` | PostgreSQL data directory (only in PostgreSQL mode) | Named |
 
 | Network | Purpose |
-|---------|---------||
+|---------|---------|
 | `home_network` | External network for Traefik routing (FreqUI access) |
-| `home_freqtrade_network` | Internal network (reserved for future expansion, e.g., Redis, additional services) |
+| `home_freqtrade_network` | Internal network for app-internal traffic (Freqtrade ↔ PostgreSQL in PostgreSQL mode) |
 
 ## Troubleshooting
 
@@ -194,10 +203,14 @@ Freqtrade can send real-time trade notifications via Telegram. This allows you t
 
 ### Database Issues
 
-- Freqtrade uses SQLite by default (no separate database service needed)
-- Database file location: `user_data/tradesv3.sqlite` (inside the volume)
-- To inspect the database, use: `docker exec -it freqtrade sqlite3 /freqtrade/user_data/tradesv3.sqlite`
-- If database is corrupted, stop the bot and remove/rename the `.sqlite` file to start fresh
+- Quick health check script (host-side): `python3 apps/freqtrade/check_database.py`
+- For SQLite mode:
+   - DB file location: `user_data/tradesv3.sqlite`
+   - Inspect manually: `docker exec -it freqtrade sqlite3 /freqtrade/user_data/tradesv3.sqlite`
+- For PostgreSQL mode:
+   - Verify DB container: `docker ps | grep freqtrade_postgres`
+   - Inspect manually: `docker exec -it freqtrade_postgres psql -U "$FREQTRADE_POSTGRES_USER" -d "$FREQTRADE_POSTGRES_DB"`
+- For full PostgreSQL setup and troubleshooting, see [POSTGRES.md](POSTGRES.md)
 
 ### Trading Not Starting
 
