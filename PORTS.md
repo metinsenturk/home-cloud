@@ -19,3 +19,4 @@ Portrainer app also shows which ports are in use in the server. Go to http://por
 - **infra-mssql**: Port 1433 is exposed for SQL Server tools (SSMS, Azure Data Studio, sqlcmd) from the host machine.
 - **infra-mongodb**: Port 27017 is exposed for MongoDB tools (MongoDB Compass, Studio 3T, mongosh) from the host machine.
 - **gitlab**: Port 2222 is exposed for Git over SSH (container port 22).
+- **freqtrade**: Uses dedicated PostgreSQL instance (port 5432 internal only, NOT exposed to host). FreqUI accessed via Traefik: `freqtrade.${DOMAIN}`

@@ -1,0 +1,78 @@
+services:
+  freqtrade-postgres:
+    image: postgres:latest
+    container_name: freqtrade_postgres
+    restart: unless-stopped
+    networks:
+      - home_freqtrade_network
+    volumes:
+      - home_freqtrade_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${FREQTRADE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${FREQTRADE_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${FREQTRADE_POSTGRES_DB}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$FREQTRADE_POSTGRES_USER -d $$FREQTRADE_POSTGRES_DB"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  freqtrade:
+    image: freqtradeorg/freqtrade:latest
+    container_name: freqtrade
+    restart: unless-stopped
+    networks:
+      - home_network
+      - home_freqtrade_network
+    volumes:
+      - home_freqtrade_data:/freqtrade/user_data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.freqtrade.rule=Host(`freqtrade.${DOMAIN}`)"
+      - "traefik.http.services.freqtrade.loadbalancer.server.port=8080"
+      - "traefik.docker.network=home_network"
+    environment:
+      # Database Configuration - Environment variables override config
+      FREQTRADE__DB_URL: postgresql://$$FREQTRADE_POSTGRES_USER:$$FREQTRADE_POSTGRES_PASSWORD@freqtrade-postgres:5432/$$FREQTRADE_POSTGRES_DB
+      # API Server Configuration
+      FREQTRADE__API_SERVER__ENABLED: "true"
+      FREQTRADE__API_SERVER__LISTEN_IP_ADDRESS: "0.0.0.0"
+      FREQTRADE__API_SERVER__LISTEN_PORT: 8080
+      FREQTRADE__API_SERVER__USERNAME: ${FREQTRADE_API_USERNAME}
+      FREQTRADE__API_SERVER__PASSWORD: ${FREQTRADE_API_PASSWORD}
+      FREQTRADE__API_SERVER__JWT_SECRET_KEY: ${FREQTRADE_JWT_SECRET}
+      FREQTRADE__API_SERVER__WS_TOKEN: ${FREQTRADE_WS_TOKEN}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/ping"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      freqtrade-postgres:
+        condition: service_healthy
+    command: freqtrade trade --config user_data/config.json
+
+networks:
+  home_network:
+    name: home_network
+    driver: bridge
+    external: true
+  home_freqtrade_network:
+    name: home_freqtrade_network
+    driver: bridge
+
+volumes:
+  home_freqtrade_data:
+    name: home_freqtrade_data
+  home_freqtrade_postgres_data:
+    name: home_freqtrade_postgres_data
