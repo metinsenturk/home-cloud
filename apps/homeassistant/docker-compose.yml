@@ -1,0 +1,34 @@
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:latest
+    container_name: homeassistant
+    restart: unless-stopped
+    networks:
+      - home_network
+    volumes:
+      - home_homeassistant_data:/config
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homeassistant.rule=Host(`homeassistant.${DOMAIN}`)"
+      - "traefik.http.services.homeassistant.loadbalancer.server.port=8123"
+      - "traefik.docker.network=home_network"
+    environment:
+      - TZ=${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8123/manifest.json"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+networks:
+  home_network:
+    external: true
+
+volumes:
+  home_homeassistant_data:
+    name: home_homeassistant_data

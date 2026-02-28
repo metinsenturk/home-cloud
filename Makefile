@@ -950,6 +950,20 @@ down-homebridge:
 		--env-file apps/homebridge/.env \
 		-f apps/homebridge/docker-compose.yml down
 
+.PHONY: up-homeassistant
+up-homeassistant: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/homeassistant/.env \
+		-f apps/homeassistant/docker-compose.yml up -d
+
+.PHONY: down-homeassistant
+down-homeassistant:
+	docker compose \
+		--env-file .env \
+		--env-file apps/homeassistant/.env \
+		-f apps/homeassistant/docker-compose.yml down
+
 .PHONY: up-freqtrade
 up-freqtrade: create-network
 	docker compose \
