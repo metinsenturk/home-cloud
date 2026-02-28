@@ -59,6 +59,8 @@
 #   make up-base                     # Launches base services (Traefik, Dozzle, WUD)
 #   make up-all                      # Launches all services
 #   make test-makefile               # Runs unit-like tests for Makefile commands
+#   make test-makefile-integration   # Runs real-docker integration tests (opt-in)
+#   make test-makefile-all           # Runs unit + integration tests
 #   make list-groups                 # Lists available custom app groups
 #   make init-groups                 # Creates group config file from example
 #   make clean-groups                # Removes group config file
@@ -152,6 +154,31 @@ test-makefile:
 		exit 1; \
 	fi
 	@bats tests/*.bats
+
+.PHONY: test-makefile-integration
+test-makefile-integration:
+	@# Runs integration tests against real Docker resources.
+	@# Safety: requires explicit opt-in to avoid disrupting active local stacks.
+	@if ! command -v bats > /dev/null 2>&1; then \
+		echo "✗ Error: bats is required. Install bats-core to run tests."; \
+		echo "  Ubuntu/WSL: sudo apt-get install -y bats"; \
+		exit 1; \
+	fi
+	@if [ "$(RUN_INTEGRATION)" != "1" ]; then \
+		echo "✗ Error: integration tests are opt-in."; \
+		echo "  Run: make test-makefile-integration RUN_INTEGRATION=1"; \
+		exit 1; \
+	fi
+	@RUN_INTEGRATION=1 bats tests/integration/*.bats
+
+.PHONY: test-makefile-all
+test-makefile-all: test-makefile
+	@# Runs all test layers. Integration remains opt-in for safety.
+	@if [ "$(RUN_INTEGRATION)" = "1" ]; then \
+		$(MAKE) test-makefile-integration RUN_INTEGRATION=1; \
+	else \
+		echo "Skipping integration tests (set RUN_INTEGRATION=1 to enable)."; \
+	fi
 
 .PHONY: init-groups
 init-groups:
