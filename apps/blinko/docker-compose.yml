@@ -51,6 +51,12 @@ services:
       driver: json-file
       options:
         max-size: "10m"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider --output-document=- http://127.0.0.1:1111 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s        
     depends_on:
       blinko-db:
         condition: service_healthy
