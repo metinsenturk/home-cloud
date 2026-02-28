@@ -53,6 +53,11 @@ teardown() {
   run wait_for_container_healthy_or_running blinko 180
   [ "$status" -eq 0 ]
 
+  # Explicitly verify healthcheck is "healthy" (strict validation)
+  run docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' blinko
+  [ "$status" -eq 0 ]
+  [[ "$output" == "healthy" || "$output" == "running" ]]
+
   # Verify container is in docker ps
   run docker ps --format '{{.Names}}'
   [ "$status" -eq 0 ]
@@ -67,6 +72,46 @@ teardown() {
   run docker ps -a --format '{{.Names}}'
   [ "$status" -eq 0 ]
   [[ "$output" != *"blinko"* ]]
+}
+
+# ==============================================================================
+# Infrastructure Pattern
+# ==============================================================================
+# Infrastructure services (databases, caches) often have no app .env or different
+# naming conventions. They have database-specific healthchecks.
+
+@test "infra-postgres (infrastructure) lifecycle: up → wait healthy → down → verify removed" {
+  export INTEGRATION_CURRENT_APP="infra-postgres"
+  require_containers_absent_or_skip infra_postgres
+
+  # Start infra service
+  run run_make_repo up-infra-postgres
+  [ "$status" -eq 0 ]
+  INTEGRATION_APP_STARTED=1
+
+  # Wait for container to be healthy/running
+  run wait_for_container_healthy_or_running infra_postgres 180
+  [ "$status" -eq 0 ]
+
+  # Explicitly verify healthcheck is "healthy" (strict check)
+  run docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' infra_postgres
+  [ "$status" -eq 0 ]
+  [[ "$output" == "healthy" ]]
+
+  # Verify container is in docker ps
+  run docker ps --format '{{.Names}}'
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"infra_postgres"* ]]
+
+  # Stop infra service
+  run run_make_repo down-infra-postgres
+  [ "$status" -eq 0 ]
+  INTEGRATION_APP_STARTED=0
+
+  # Verify container is removed
+  run docker ps -a --format '{{.Names}}'
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"infra_postgres"* ]]
 }
 
 # ==============================================================================
@@ -93,6 +138,11 @@ teardown() {
   # Wait for container to be healthy/running
   run wait_for_container_healthy_or_running freqtrade 300
   [ "$status" -eq 0 ]
+
+  # Explicitly verify healthcheck is "healthy" (strict validation)
+  run docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' freqtrade
+  [ "$status" -eq 0 ]
+  [[ "$output" == "healthy" || "$output" == "running" ]]
 
   # Verify container is in docker ps
   run docker ps --format '{{.Names}}'
