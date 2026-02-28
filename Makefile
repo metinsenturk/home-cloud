@@ -6,6 +6,8 @@
 #   make up-base                     # Launches base services (Traefik, Dozzle, WUD)
 #   make up-all                      # Launches all services
 #   make list-groups                 # Lists available custom app groups
+#   make init-groups                 # Creates group config file from example
+#   make clean-groups                # Removes group config file
 #   make up-group-favorites          # Launches apps from a custom group
 #   make down-group-favorites        # Stops apps from a custom group
 #   make up-favorites                # Shortcut alias for up-group-favorites
@@ -27,11 +29,14 @@
 #           finance: [freqtrade, metabase]
 #
 # Examples:
-#   make list-groups
-#   make up-group-favorites
-#   make down-group-favorites
-#   make list-groups GROUPS_BACKEND=yaml
-#   make up-group-favorites GROUPS_BACKEND=yaml GROUPS_YAML_FILE=groups.yaml
+#   make init-groups                 # Create groups.mk from example
+#   make list-groups                 # List available groups
+#   make up-group-favorites          # Start favorites group
+#   make down-group-favorites        # Stop favorites group
+#   make clean-groups                # Remove groups.mk
+#   make init-groups GROUPS_BACKEND=yaml        # Create groups.yaml
+#   make list-groups GROUPS_BACKEND=yaml        # List groups (YAML mode)
+#   make clean-groups GROUPS_BACKEND=yaml       # Remove groups.yaml
 
 NETWORK_NAME=home_network
 
@@ -83,6 +88,68 @@ check-validity:
 	@docker compose -f apps/$(APP)/docker-compose.yml config > /dev/null 2>&1 && \
 		echo "✓ $(APP) compose file is valid" || \
 		(echo "✗ $(APP) compose file is invalid" && exit 1)
+
+.PHONY: init-groups
+init-groups:
+	@# Creates a group config file from the example template.
+	@# Fails if the target file already exists to prevent accidental overwrites.
+	@case "$(GROUPS_BACKEND)" in \
+		yaml) \
+			if [ -f "$(GROUPS_YAML_FILE)" ]; then \
+				echo "✗ Error: $(GROUPS_YAML_FILE) already exists"; \
+				exit 1; \
+			fi; \
+			if [ ! -f "$(GROUPS_YAML_FILE).example" ]; then \
+				echo "✗ Error: $(GROUPS_YAML_FILE).example not found"; \
+				exit 1; \
+			fi; \
+			cp "$(GROUPS_YAML_FILE).example" "$(GROUPS_YAML_FILE)"; \
+			echo "✓ Created $(GROUPS_YAML_FILE) from example"; \
+			;; \
+		make) \
+			if [ -f "$(GROUPS_MAKE_FILE)" ]; then \
+				echo "✗ Error: $(GROUPS_MAKE_FILE) already exists"; \
+				exit 1; \
+			fi; \
+			if [ ! -f "$(GROUPS_MAKE_FILE).example" ]; then \
+				echo "✗ Error: $(GROUPS_MAKE_FILE).example not found"; \
+				exit 1; \
+			fi; \
+			cp "$(GROUPS_MAKE_FILE).example" "$(GROUPS_MAKE_FILE)"; \
+			echo "✓ Created $(GROUPS_MAKE_FILE) from example"; \
+			;; \
+		*) \
+			echo "✗ Error: invalid GROUPS_BACKEND='$(GROUPS_BACKEND)' (use 'make' or 'yaml')"; \
+			exit 1; \
+			;; \
+	esac
+
+.PHONY: clean-groups
+clean-groups:
+	@# Removes the active group config file.
+	@# Fails if the file doesn't exist to prevent silent failures.
+	@case "$(GROUPS_BACKEND)" in \
+		yaml) \
+			if [ ! -f "$(GROUPS_YAML_FILE)" ]; then \
+				echo "✗ Error: $(GROUPS_YAML_FILE) not found"; \
+				exit 1; \
+			fi; \
+			rm "$(GROUPS_YAML_FILE)"; \
+			echo "✓ Removed $(GROUPS_YAML_FILE)"; \
+			;; \
+		make) \
+			if [ ! -f "$(GROUPS_MAKE_FILE)" ]; then \
+				echo "✗ Error: $(GROUPS_MAKE_FILE) not found"; \
+				exit 1; \
+			fi; \
+			rm "$(GROUPS_MAKE_FILE)"; \
+			echo "✓ Removed $(GROUPS_MAKE_FILE)"; \
+			;; \
+		*) \
+			echo "✗ Error: invalid GROUPS_BACKEND='$(GROUPS_BACKEND)' (use 'make' or 'yaml')"; \
+			exit 1; \
+			;; \
+	esac
 
 .PHONY: list-groups
 list-groups:
