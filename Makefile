@@ -936,6 +936,20 @@ down-yopass:
 		--env-file apps/yopass/.env \
 		-f apps/yopass/docker-compose.yml down
 
+.PHONY: up-homebridge
+up-homebridge: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/homebridge/.env \
+		-f apps/homebridge/docker-compose.yml up -d
+
+.PHONY: down-homebridge
+down-homebridge:
+	docker compose \
+		--env-file .env \
+		--env-file apps/homebridge/.env \
+		-f apps/homebridge/docker-compose.yml down
+
 .PHONY: up-freqtrade
 up-freqtrade: create-network
 	docker compose \

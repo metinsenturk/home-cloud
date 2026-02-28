@@ -1,0 +1,40 @@
+services:
+  homebridge:
+    image: homebridge/homebridge:latest
+    container_name: homebridge
+    restart: unless-stopped
+    networks:
+      - home_network
+    ports:
+      - "51826:51826"
+    volumes:
+      - home_homebridge_data:/homebridge
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homebridge.rule=Host(`homebridge.${DOMAIN}`)"
+      - "traefik.http.services.homebridge.loadbalancer.server.port=8581"
+      - "traefik.docker.network=home_network"
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - HOMEBRIDGE_CONFIG_UI=1
+      - HOMEBRIDGE_CONFIG_UI_PORT=8581
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8581"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  home_network:
+    external: true
+
+volumes:
+  home_homebridge_data:
+    name: home_homebridge_data

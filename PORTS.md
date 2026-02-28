@@ -12,6 +12,7 @@ Portrainer app also shows which ports are in use in the server. Go to http://por
 | 1433 | infra-mssql | 1433 | Microsoft SQL Server for external tools |
 | 27017 | infra-mongodb | 27017 | MongoDB database server for external tools |
 | 2222 | gitlab | 22 | GitLab SSH for Git operations |
+| 51826 | homebridge | 51826 | HomeKit bridge for iOS device connectivity |
 
 ## Notes
 - **traefik**: Ports 80 and 443 must be open on the host firewall for external web traffic.
