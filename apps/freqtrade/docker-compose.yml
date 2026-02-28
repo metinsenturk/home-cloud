@@ -31,6 +31,7 @@ services:
       - home_freqtrade_network
     volumes:
       - home_freqtrade_data:/freqtrade/user_data
+      - ./entrypoint.py:/entrypoint.py:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.freqtrade.rule=Host(`freqtrade.${DOMAIN}`)"
@@ -64,7 +65,8 @@ services:
     # depends_on:
     #   freqtrade-postgres:
     #     condition: service_healthy
-    command: trade --config user_data/config.json --strategy SampleStrategy
+    entrypoint: python3 /entrypoint.py
+    command: freqtrade trade --config user_data/config.json --strategy SampleStrategy
 
 networks:
   home_network:
