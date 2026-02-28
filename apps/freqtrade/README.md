@@ -71,6 +71,9 @@ These variables override `config.json` values and must be set in `.env`:
 | `FREQTRADE_API_PASSWORD` | FreqUI login password | Local `.env` | Yes |
 | `FREQTRADE_JWT_SECRET` | JWT token secret for API authentication | Local `.env` | Yes |
 | `FREQTRADE_WS_TOKEN` | WebSocket token for real-time updates | Local `.env` | Yes |
+| `FREQTRADE_TELEGRAM_ENABLED` | Enable/disable Telegram notifications | Local `.env` | No (defaults to false) |
+| `FREQTRADE_TELEGRAM_TOKEN` | Telegram bot token from BotFather | Local `.env` | Only if Telegram enabled |
+| `FREQTRADE_TELEGRAM_CHAT_ID` | Your Telegram chat ID for notifications | Local `.env` | Only if Telegram enabled |
 | `DOMAIN` | Domain for Traefik routing | Global (root `.env`) | Yes |
 
 ### Configuring Trading Parameters
@@ -85,6 +88,41 @@ Once the bot is running, you can configure:
 - **Dry Run Mode**: Test without real money (recommended first)
 
 **Note**: Exchange API keys and sensitive trading configuration should be added separately to a private `config-private.json` and loaded via the Freqtrade multi-config feature.
+
+### Telegram Notifications (Optional)
+
+Freqtrade can send real-time trade notifications via Telegram. To enable:
+
+1. **Create a Telegram bot**:
+   - Message [@BotFather](https://t.me/botfather) on Telegram
+   - Use `/newbot` to create a new bot
+   - Save the bot token provided
+
+2. **Get your Telegram Chat ID**:
+   - Message your bot
+   - Visit `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`
+   - Find your chat ID in the response
+
+3. **Update `.env`**:
+   ```dotenv
+   FREQTRADE_TELEGRAM_ENABLED=true
+   FREQTRADE_TELEGRAM_TOKEN=your_bot_token_here
+   FREQTRADE_TELEGRAM_CHAT_ID=your_chat_id_here
+   ```
+
+4. **Restart the bot**:
+   ```bash
+   make down-freqtrade && make up-freqtrade
+   ```
+
+Available Telegram commands:
+- `/start` - Start the bot
+- `/stop` - Stop the bot
+- `/status` - Show open trades
+- `/profit` - Show profit/loss
+- `/balance` - Show account balance
+- `/forceexit <trade_id>` - Exit a specific trade
+- `/help` - Show all commands
 
 ## Volumes & Networks
 
