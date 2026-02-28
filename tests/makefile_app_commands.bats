@@ -4,75 +4,122 @@
 #
 # These tests assert docker compose argument wiring for representative targets.
 # They do not start real containers; assertions read the mocked docker log.
+#
+# Test Organization:
+# - Split into two categories: simple compose and multi-file compose
+# - Simple: Single compose file with standard env-file patterns
+# - Multi-file: Multiple compose files or additional flags (--build)
+#
+# This split improves failure localization and makes it clear which patterns
+# are being validated (basic orchestration vs. complex layering).
+#
+# Pattern:
+# - Table-driven cases keep coverage compact and easy to extend
+# - Add a new row to the appropriate table to cover another target
+# - Format: target_name|expected_docker_arguments
+#
+# IMPORTANT - Tab Format:
+# The expected_docker_arguments use TAB characters (not spaces) between each
+# argument because the mock docker script logs with tab separators. This looks
+# odd in the editor but is necessary for exact match validation.
+# 
+# Example breakdown of a table row:
+#   up-blinko|docker<TAB>compose<TAB>--env-file<TAB>.env<TAB>...
+#   
+# When reading the file, each argument after the pipe is separated by tabs.
 
 load test_helper
 
-# Verifies base service command uses root env file and traefik compose path.
-@test "up-traefik composes with root env and traefik file" {
+# Helper function to validate docker compose invocations.
+# - Executes a make target
+# - Compares actual docker log against expected tab-separated argv
+# - Provides clear failure messages with diff output
+run_and_assert_compose_line() {
+  local target="$1"
+  local expected_line="$2"
+
   reset_docker_log
+  run make_in_tmp "$target"
 
-  run make_in_tmp up-traefik
+  if [ "$status" -ne 0 ]; then
+    echo "Target failed: $target"
+    echo "$output"
+    return 1
+  fi
 
-  [ "$status" -eq 0 ]
-  docker_log_contains $'docker\tcompose\t--env-file\t.env\t-f\tapps/traefik/docker-compose.yml\tup\t-d'
+  if ! docker_log_contains "$expected_line"; then
+    echo "Expected docker invocation not found for target: $target"
+    echo "Expected:"
+    echo "$expected_line"
+    echo "Actual docker log:"
+    cat "$MOCK_DOCKER_LOG_FILE"
+    return 1
+  fi
 }
 
-# Verifies standard app command uses root + app env files and correct compose file.
-@test "up-blinko composes with root and app env files" {
-  reset_docker_log
+# ==============================================================================
+# Simple Compose Targets
+# ==============================================================================
+# These targets use a single docker-compose.yml file with standard env vars.
+# They are the most common pattern in the infrastructure.
+#
+# Table format: target|expected_docker_argv
+# - target: the make target to test (e.g., up-blinko)
+# - expected_docker_argv: tab-separated arguments from mock docker log
+#
+# Each row validates:
+# - Correct env-file loading order (.env first, then app .env if present)
+# - Correct compose file path resolution
+# - Correct compose command (up -d, down, etc.)
+#
+# Note: The pipe-separated values after target use TABS (not spaces) to match
+# the mock docker log format. This is intentional, though it looks odd in the editor.
+#
+# Examples explained:
+# - up-traefik: Root .env only (no app-specific .env file)
+# - up-blinko: Root .env + app .env (standard pattern for most apps)
+# - down-blinko: Same env loading as up, but with down command
+# - up-infra-postgres: Infrastructure service with app-specific env
 
-  run make_in_tmp up-blinko
-
-  [ "$status" -eq 0 ]
-  docker_log_contains $'docker\tcompose\t--env-file\t.env\t--env-file\tapps/blinko/.env\t-f\tapps/blinko/docker-compose.yml\tup\t-d'
+@test "simple compose targets build expected docker compose commands" {
+  while IFS='|' read -r target expected_line; do
+    run_and_assert_compose_line "$target" "$expected_line"
+  done <<'EOF'
+up-traefik|docker	compose	--env-file	.env	-f	apps/traefik/docker-compose.yml	up	-d
+up-blinko|docker	compose	--env-file	.env	--env-file	apps/blinko/.env	-f	apps/blinko/docker-compose.yml	up	-d
+down-blinko|docker	compose	--env-file	.env	--env-file	apps/blinko/.env	-f	apps/blinko/docker-compose.yml	down
+up-infra-postgres|docker	compose	--env-file	.env	--env-file	apps/infra_postgres/.env	-f	apps/infra_postgres/docker-compose.yml	up	-d
+EOF
 }
 
-# Verifies standard down command keeps the same env/compose wiring.
-@test "down-blinko composes with down action" {
-  reset_docker_log
+# ==============================================================================
+# Multi-File Compose Targets
+# ==============================================================================
+# These targets involve multiple compose files or additional flags (--build).
+# They represent more complex patterns like:
+# - Overlay compose files (e.g., freqtrade with postgres backend)
+# - Build targets with custom flags
+#
+# Table format: target|expected_docker_argv
+# - Multiple -f flags indicate compose file layering (base file, then overlays)
+# - --build flag indicates custom image building during up
+# - --no-cache ensures clean builds without layer caching
+# - Order matters: base compose file first, then override/extension files
+#
+# Note: The pipe-separated values use TABS (not spaces) to match the mock docker
+# log format. Visual alignment is sacrificed for exact match validation.
+#
+# Examples explained:
+# - up-freqtrade-postgres: Two compose files + up + build flag
+# - down-freqtrade-postgres: Same files + down (no build)
+# - build-freqtrade: Same files + explicit build command with --no-cache
 
-  run make_in_tmp down-blinko
-
-  [ "$status" -eq 0 ]
-  docker_log_contains $'docker\tcompose\t--env-file\t.env\t--env-file\tapps/blinko/.env\t-f\tapps/blinko/docker-compose.yml\tdown'
-}
-
-# Verifies infra app wiring uses underscore path and expected env file.
-@test "up-infra-postgres uses infra path and env file" {
-  reset_docker_log
-
-  run make_in_tmp up-infra-postgres
-
-  [ "$status" -eq 0 ]
-  docker_log_contains $'docker\tcompose\t--env-file\t.env\t--env-file\tapps/infra_postgres/.env\t-f\tapps/infra_postgres/docker-compose.yml\tup\t-d'
-}
-
-# Verifies multi-file compose command for freqtrade postgres up target.
-@test "up-freqtrade-postgres uses both compose files and build" {
-  reset_docker_log
-
-  run make_in_tmp up-freqtrade-postgres
-
-  [ "$status" -eq 0 ]
-  docker_log_contains $'docker\tcompose\t--env-file\t.env\t--env-file\tapps/freqtrade/.env\t-f\tapps/freqtrade/docker-compose.yml\t-f\tapps/freqtrade/docker-compose.postgres.yml\tup\t-d\t--build'
-}
-
-# Verifies multi-file compose command for freqtrade postgres down target.
-@test "down-freqtrade-postgres uses both compose files and down" {
-  reset_docker_log
-
-  run make_in_tmp down-freqtrade-postgres
-
-  [ "$status" -eq 0 ]
-  docker_log_contains $'docker\tcompose\t--env-file\t.env\t--env-file\tapps/freqtrade/.env\t-f\tapps/freqtrade/docker-compose.yml\t-f\tapps/freqtrade/docker-compose.postgres.yml\tdown'
-}
-
-# Verifies build target uses both files and no-cache option.
-@test "build-freqtrade uses both compose files and no-cache" {
-  reset_docker_log
-
-  run make_in_tmp build-freqtrade
-
-  [ "$status" -eq 0 ]
-  docker_log_contains $'docker\tcompose\t--env-file\t.env\t--env-file\tapps/freqtrade/.env\t-f\tapps/freqtrade/docker-compose.yml\t-f\tapps/freqtrade/docker-compose.postgres.yml\tbuild\t--no-cache'
+@test "multi-file compose targets build expected docker compose commands" {
+  while IFS='|' read -r target expected_line; do
+    run_and_assert_compose_line "$target" "$expected_line"
+  done <<'EOF'
+up-freqtrade-postgres|docker	compose	--env-file	.env	--env-file	apps/freqtrade/.env	-f	apps/freqtrade/docker-compose.yml	-f	apps/freqtrade/docker-compose.postgres.yml	up	-d	--build
+down-freqtrade-postgres|docker	compose	--env-file	.env	--env-file	apps/freqtrade/.env	-f	apps/freqtrade/docker-compose.yml	-f	apps/freqtrade/docker-compose.postgres.yml	down
+build-freqtrade|docker	compose	--env-file	.env	--env-file	apps/freqtrade/.env	-f	apps/freqtrade/docker-compose.yml	-f	apps/freqtrade/docker-compose.postgres.yml	build	--no-cache
+EOF
 }
