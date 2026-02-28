@@ -8,8 +8,7 @@ A free and open source crypto trading bot written in Python. Freqtrade allows yo
 
 | Service | Role | Port | Network |
 |---------|------|------|---------|
-| `freqtrade` | Trading bot with REST API and FreqUI web interface | 8080 | `home_network` (public via Traefik) + `home_freqtrade_network` (private) |
-| `freqtrade-postgres` | Dedicated PostgreSQL database for trade history and configuration | 5432 | `home_freqtrade_network` (private, not exposed) |
+| `freqtrade` | Trading bot with REST API and FreqUI web interface | 8080 | `home_network` (public via Traefik) + `home_freqtrade_network` (private, reserved for future use) |
 
 ## Access
 
@@ -103,9 +102,6 @@ These variables override `config.json` values and must be set in `.env`:
 
 | Variable | Purpose | Source | Required |
 |----------|---------|--------|----------|
-| `FREQTRADE_POSTGRES_USER` | PostgreSQL username | Local `.env` | Yes |
-| `FREQTRADE_POSTGRES_PASSWORD` | PostgreSQL password | Local `.env` | Yes |
-| `FREQTRADE_POSTGRES_DB` | PostgreSQL database name | Local `.env` | Yes |
 | `FREQTRADE_API_USERNAME` | FreqUI login username | Local `.env` | Yes |
 | `FREQTRADE_API_PASSWORD` | FreqUI login password | Local `.env` | Yes |
 | `FREQTRADE_JWT_SECRET` | JWT token secret for API authentication | Local `.env` | Yes |
@@ -114,6 +110,8 @@ These variables override `config.json` values and must be set in `.env`:
 | `FREQTRADE_TELEGRAM_TOKEN` | Telegram bot token from BotFather | Local `.env` | Only if Telegram enabled |
 | `FREQTRADE_TELEGRAM_CHAT_ID` | Your Telegram chat ID for notifications | Local `.env` | Only if Telegram enabled |
 | `DOMAIN` | Domain for Traefik routing | Global (root `.env`) | Yes |
+
+**Note**: Freqtrade uses SQLite by default (`sqlite:////freqtrade/user_data/tradesv3.sqlite`). No separate database service is required.
 
 ### Configuring Trading Parameters
 
@@ -142,13 +140,12 @@ Freqtrade can send real-time trade notifications via Telegram. This allows you t
 
 | Volume | Purpose | Type |
 |--------|---------|------|
-| `home_freqtrade_data` | User data directory (strategies, config, logs, data) | Named |
-| `home_freqtrade_postgres_data` | PostgreSQL database storage | Named |
+| `home_freqtrade_data` | User data directory (strategies, config, logs, data, SQLite database) | Named |
 
 | Network | Purpose |
-|---------|---------|
+|---------|---------||
 | `home_network` | External network for Traefik routing (FreqUI access) |
-| `home_freqtrade_network` | Internal network for freqtrade ↔ PostgreSQL communication |
+| `home_freqtrade_network` | Internal network (reserved for future expansion, e.g., Redis, additional services) |
 
 ## Troubleshooting
 
@@ -159,12 +156,12 @@ Freqtrade can send real-time trade notifications via Telegram. This allows you t
 - Check bot is healthy: `docker logs freqtrade`
 - Verify API server is enabled in logs
 
-### Database Connection Failed
+### Database Issues
 
-- Check PostgreSQL is healthy: `docker logs freqtrade_postgres`
-- Verify credentials in `.env` match
-- Ensure `home_freqtrade_network` exists: `docker network ls`
-- Check database initialization logs: `docker logs freqtrade_postgres`
+- Freqtrade uses SQLite by default (no separate database service needed)
+- Database file location: `user_data/tradesv3.sqlite` (inside the volume)
+- To inspect the database, use: `docker exec -it freqtrade sqlite3 /freqtrade/user_data/tradesv3.sqlite`
+- If database is corrupted, stop the bot and remove/rename the `.sqlite` file to start fresh
 
 ### Trading Not Starting
 
