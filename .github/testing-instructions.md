@@ -36,7 +36,8 @@ This prompt standardizes table-driven updates for `tests/makefile_app_commands.b
 - Group backend/lifecycle targets: `tests/makefile_groups.bats`
 - Per-app command wiring: `tests/makefile_app_commands.bats`
 - Meta/aggregate targets: `tests/makefile_aggregates.bats`
-- Shared helpers: `tests/test_helper.bash`
+- Integration targets (real Docker): `tests/integration/*.bats`
+- Shared helpers: `tests/test_helper.bash` (unit-like), `tests/integration/test_helper_integration.bash` (integration)
 
 When adding a new category that does not fit existing files, create a new `tests/makefile_<category>.bats`.
 
@@ -78,8 +79,10 @@ When a **new test file** is created, it must start with a top-level explanatory 
 
 ### 5) Environment and Workspace Safety
 
-- Tests must run in temporary workspace only.
-- Do not mutate repository state directly.
+- Unit-like tests must run in temporary workspace only.
+- Integration tests run against real Docker and must be explicit opt-in (`RUN_INTEGRATION=1`).
+- Integration tests should skip disruptive actions if target containers already exist.
+- Do not mutate repository state directly outside expected lifecycle/cleanup.
 - Ensure line ending safety (CRLF issues are handled by test helper).
 
 ## What to Test for New Makefile Targets
