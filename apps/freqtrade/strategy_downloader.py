@@ -6,20 +6,39 @@ Downloads official freqtrade strategies from:
     https://github.com/freqtrade/freqtrade-strategies/tree/main/user_data/strategies
 
 This module downloads the official freqtrade strategies repository and copies
-strategy files into the user_data/strategies directory. This is optional and can
-be enabled/disabled via a flag in entrypoint.py.
+strategy files and folders into the user_data/strategies directory. This is
+optional and can be enabled/disabled via a flag in entrypoint.py.
+
+What this script does:
+    1. Checks if custom strategies already exist (skips if they do)
+    2. Downloads the freqtrade-strategies repository as a ZIP from GitHub
+    3. Extracts the ZIP to a temporary directory
+    4. Copies all strategy files (.py) and helper folders to user_data/strategies
+    5. Cleans up temporary files
 
 Why use this?
     - Official strategies are well-tested and maintained by the freqtrade team
     - Provides a good starting point for developing your own strategies
     - Can be used as reference implementations
-    - Downloaded on first start if enabled
+    - Includes helper modules and indicator folders
+    - Downloaded on first start if enabled (skipped on subsequent starts)
+    - Non-destructive: existing custom strategies are not overwritten
 
-Implementation:
+Implementation details:
     - Uses urllib + zipfile (Python stdlib only, no external dependencies)
-    - Downloads ZIP of main branch from GitHub
-    - Extracts only the strategies folder
-    - Skips if strategies already exist (doesn't overwrite custom strategies)
+    - Dynamically locates the strategies folder in the extracted repo
+    - Copies both .py files and folder structures (indicators, helpers, etc.)
+    - Gracefully handles errors and continues if download fails
+
+Usage example (called from entrypoint.py):
+    from strategy_downloader import download_strategies
+    
+    if ENABLE_STRATEGY_DOWNLOAD:
+        download_strategies()  # Returns True if successful or skipped
+
+Environment:
+    Expected to run inside the freqtrade Docker container at /freqtrade/user_data
+    Temporary files extracted to /tmp/ and cleaned up automatically
 """
 
 import urllib.request
@@ -30,9 +49,11 @@ from pathlib import Path
 
 # Module-level configuration
 REPO_ZIP_URL = "https://github.com/freqtrade/freqtrade-strategies/archive/refs/heads/main.zip"
+REPO_STRATEGIES_RELATIVE_PATH = Path("user_data/strategies")  # Path within extracted repo
+
 USER_DATA_DIR = Path("/freqtrade/user_data")
-STRATEGIES_DIR = USER_DATA_DIR / "strategies"
-TEMP_DIR = Path("/tmp")
+STRATEGIES_DIR = USER_DATA_DIR / "strategies"  # Destination: container's strategy directory
+TEMP_DIR = Path("/tmp")  # Temporary extraction directory
 
 # Log prefix for this module
 LOG_PREFIX = "[strategy-downloader]"
@@ -85,24 +106,31 @@ def extract_zip(zip_path: Path, extract_path: Path) -> bool:
     """
     Extract the downloaded ZIP file to a temporary directory.
     
+    GitHub ZIP archives contain a root folder (e.g., 'freqtrade-strategies-main')
+    inside the ZIP. When extracted, this becomes a subdirectory in TEMP_DIR.
+    
+    The actual extracted folder path is discovered dynamically by find_strategies_folder()
+    rather than hardcoding, so this works even if GitHub changes the naming convention.
+    
     Args:
         zip_path: Path to the ZIP file to extract
-        extract_path: Path where to extract the contents
+        extract_path: Path where to extract the contents (not used but kept for API compatibility)
     
     Returns:
         True if successful, False on error
     """
     try:
         log("Extracting strategies...")
+        # Extract to TEMP_DIR; GitHub ZIP will create a subfolder like 'freqtrade-strategies-main'
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(str(TEMP_DIR))
         
-        # Find the actual extracted directory (GitHub zips contain a root folder)
+        # Verify extraction by finding the extracted directory
         extracted_dirs = list(TEMP_DIR.glob("freqtrade-strategies-*"))
         if extracted_dirs:
             actual_extract_path = extracted_dirs[0]
             log(f"Extracted to: {actual_extract_path.name}")
-            # Move the actual path for use in copy_strategies
+            # The actual path is found dynamically later in download_strategies()
             return True
         
         return True
@@ -116,7 +144,9 @@ def find_strategies_folder() -> Path | None:
     Find the strategies folder in the extracted repository.
     
     GitHub ZIP archives extract with a root folder like 'freqtrade-strategies-main'.
-    This function finds it regardless of the exact folder name.
+    This function searches for the strategies folder regardless of the exact root
+    folder name by looking for the expected relative path (defined in
+    REPO_STRATEGIES_RELATIVE_PATH) within the extracted repo.
     
     Returns:
         Path to strategies folder if found, None otherwise
@@ -125,7 +155,8 @@ def find_strategies_folder() -> Path | None:
     extracted_dirs = list(TEMP_DIR.glob("freqtrade-strategies-*"))
     
     for extracted_dir in extracted_dirs:
-        strategies_path = extracted_dir / "user_data" / "strategies"
+        # Use the module variable for the relative path
+        strategies_path = extracted_dir / REPO_STRATEGIES_RELATIVE_PATH
         if strategies_path.exists():
             return strategies_path
     
@@ -136,7 +167,14 @@ def copy_strategies(strategies_src: Path) -> bool:
     """
     Copy strategy files and folders from the extracted repository to the user_data/strategies directory.
     
-    Copies both individual .py files and folder structures (e.g., indicator folders).
+    This function copies:
+    - All .py strategy files (e.g., sample_strategy.py, adx_strategy.py)
+    - All supporting folders (e.g., indicators/, hyperopt/, etc.)
+    
+    Why folders? Official repo includes helper modules and custom indicator definitions
+    that strategies may depend on. We copy everything to ensure strategies work correctly.
+    
+    If destination folders exist, they are overwritten (to get latest from repo).
     
     Args:
         strategies_src: Path to the strategies folder in the extracted repository
