@@ -8,6 +8,33 @@ These tests validate Makefile command logic without running real Docker services
 - `make`
 - `bats` (bats-core)
 
+## Install bats (bats-core)
+
+### Ubuntu / WSL
+
+```bash
+sudo apt-get update
+sudo apt-get install -y bats
+```
+
+### macOS (Homebrew)
+
+```bash
+brew install bats-core
+```
+
+### Node/NPM (alternative)
+
+```bash
+npm install -g bats
+```
+
+### Verify install
+
+```bash
+bats --version
+```
+
 ## Run tests
 
 ```bash
@@ -25,3 +52,5 @@ make test-makefile
 - `docker` and `yq` are mocked under `tests/helpers/mock-bin`.
 - Tests run in a temporary workspace to avoid touching real files.
 - Scope focuses on group commands (`list-groups`, `up-group-*`, `down-group-*`, `init-groups`, `clean-groups`, aliases).
+- On Windows/WSL repos, line endings can break mock executables (`bash\r`).
+	The test helper normalizes line endings automatically during setup.

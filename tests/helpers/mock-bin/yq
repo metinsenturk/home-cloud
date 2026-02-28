@@ -1,9 +1,23 @@
 #!/usr/bin/env bash
+# Mock yq CLI used by Makefile unit-like tests.
+#
+# Purpose:
+# - Provide just enough behavior for the Makefile YAML group backend tests.
+# - Avoid requiring a real yq binary for unit-like command validation.
+#
+# Supported query shapes:
+# - `.groups | keys[]`
+# - `.groups["<group>"][]?`
+#
+# Notes:
+# - This is intentionally minimal and only parses the project example structure.
+# - It is not a general YAML parser and should not be used outside tests.
 set -e
 
 query=""
 file=""
 
+# Parse simplified yq arguments used by Makefile recipes.
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -r)
@@ -17,13 +31,16 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+# Return top-level group names under the `groups:` section.
 if [[ "$query" == ".groups | keys[]" ]]; then
   sed -n 's/^  \([A-Za-z0-9_-]*\):$/\1/p' "$file"
   exit 0
 fi
 
+# Extract group name from `.groups["name"][]?` query.
 group="$(printf '%s' "$query" | sed -n 's/\.groups\["\([^"]*\)"\]\[\]\?/\1/p')"
 
+# Print list items for the selected group.
 if [[ -n "$group" ]]; then
   awk -v grp="$group" '
     $0 ~ "^  " grp ":" { in_group = 1; next }

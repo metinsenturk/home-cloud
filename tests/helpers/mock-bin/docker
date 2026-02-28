@@ -1,16 +1,29 @@
 #!/usr/bin/env bash
+# Mock docker CLI used by Makefile unit-like tests.
+#
+# Purpose:
+# - Prevent tests from invoking the real Docker daemon.
+# - Return success for Docker subcommands used by the Makefile recipes.
+#
+# Behavior:
+# - Accepts `docker network inspect`, `docker network create`, and `docker compose`.
+# - Always exits 0 so tests validate Makefile flow, not Docker runtime behavior.
 set -e
 
+# Simulate successful network existence check.
 if [[ "$1" == "network" && "$2" == "inspect" ]]; then
   exit 0
 fi
 
+# Simulate successful network creation.
 if [[ "$1" == "network" && "$2" == "create" ]]; then
   exit 0
 fi
 
+# Simulate successful docker compose invocation.
 if [[ "$1" == "compose" ]]; then
   exit 0
 fi
 
+# Default success fallback for unsupported/extra invocations in tests.
 exit 0

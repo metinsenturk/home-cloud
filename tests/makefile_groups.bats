@@ -1,7 +1,18 @@
 #!/usr/bin/env bats
 
+# Makefile group-command unit-like tests.
+#
+# These tests validate command behavior (exit codes and output) for:
+# - make/yaml group backends
+# - init/clean/list group lifecycle commands
+# - generic group execution and shortcut aliases
+# - expected error paths (invalid backend, missing yq)
+#
+# External dependencies are mocked via tests/helpers/mock-bin.
+
 load test_helper
 
+# Verifies that make-backend initialization creates groups.mk from template.
 @test "init-groups creates groups.mk in make backend" {
   run make_in_tmp init-groups
 
@@ -10,6 +21,7 @@ load test_helper
   [ -f "$MAKEFILE_TEST_ROOT/groups.mk" ]
 }
 
+# Verifies overwrite protection when groups.mk already exists.
 @test "init-groups fails when groups.mk already exists" {
   run make_in_tmp init-groups
   [ "$status" -eq 0 ]
@@ -19,6 +31,7 @@ load test_helper
   [[ "$output" == *"groups.mk already exists"* ]]
 }
 
+# Verifies cleanup command removes generated groups.mk.
 @test "clean-groups removes groups.mk" {
   run make_in_tmp init-groups
   [ "$status" -eq 0 ]
@@ -29,6 +42,7 @@ load test_helper
   [ ! -f "$MAKEFILE_TEST_ROOT/groups.mk" ]
 }
 
+# Verifies list command reports a clear error when make groups are undefined.
 @test "list-groups in make backend fails without groups file" {
   run make_in_tmp list-groups
 
@@ -36,6 +50,7 @@ load test_helper
   [[ "$output" == *"no groups defined in groups.mk"* ]]
 }
 
+# Verifies list command returns configured group names in make backend.
 @test "list-groups in make backend lists groups after init" {
   run make_in_tmp init-groups
   [ "$status" -eq 0 ]
@@ -45,6 +60,7 @@ load test_helper
   [[ "$output" == *"favorites finance school"* ]]
 }
 
+# Verifies up-group target iterates all apps in declared order for make backend.
 @test "up-group-favorites in make backend iterates apps" {
   run make_in_tmp init-groups
   [ "$status" -eq 0 ]
@@ -56,6 +72,7 @@ load test_helper
   [[ "$output" == *"→ Starting jupyter"* ]]
 }
 
+# Verifies shortcut alias forwards to its generic group target.
 @test "up-favorites alias forwards to up-group-favorites" {
   run make_in_tmp init-groups
   [ "$status" -eq 0 ]
@@ -65,6 +82,7 @@ load test_helper
   [[ "$output" == *"→ Starting blinko"* ]]
 }
 
+# Verifies unknown backend values fail with an explicit error message.
 @test "invalid GROUPS_BACKEND returns error" {
   run make_in_tmp list-groups GROUPS_BACKEND=invalid
 
@@ -72,6 +90,7 @@ load test_helper
   [[ "$output" == *"invalid GROUPS_BACKEND='invalid'"* ]]
 }
 
+# Verifies yaml-backend initialization creates groups.yaml from template.
 @test "init-groups creates groups.yaml in yaml backend" {
   run make_in_tmp init-groups GROUPS_BACKEND=yaml
 
@@ -80,6 +99,7 @@ load test_helper
   [ -f "$MAKEFILE_TEST_ROOT/groups.yaml" ]
 }
 
+# Verifies yaml backend can list groups via mocked yq parser.
 @test "list-groups in yaml backend lists groups" {
   run make_in_tmp init-groups GROUPS_BACKEND=yaml
   [ "$status" -eq 0 ]
@@ -91,6 +111,7 @@ load test_helper
   [[ "$output" == *"school"* ]]
 }
 
+# Verifies yaml backend executes apps from a named group.
 @test "up-group-favorites in yaml backend iterates apps" {
   run make_in_tmp init-groups GROUPS_BACKEND=yaml
   [ "$status" -eq 0 ]
@@ -102,6 +123,7 @@ load test_helper
   [[ "$output" == *"→ Starting jupyter"* ]]
 }
 
+# Verifies yaml backend reports missing dependency when yq is unavailable.
 @test "list-groups in yaml backend fails when yq is missing" {
   run make_in_tmp init-groups GROUPS_BACKEND=yaml
   [ "$status" -eq 0 ]
