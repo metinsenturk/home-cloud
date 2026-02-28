@@ -498,6 +498,30 @@ down-freqtrade:
 		--env-file apps/freqtrade/.env \
 		-f apps/freqtrade/docker-compose.yml down
 
+.PHONY: up-freqtrade-postgres
+up-freqtrade-postgres: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/freqtrade/.env \
+		-f apps/freqtrade/docker-compose.yml \
+		-f apps/freqtrade/docker-compose.postgres.yml up -d --build
+
+.PHONY: down-freqtrade-postgres
+down-freqtrade-postgres:
+	docker compose \
+		--env-file .env \
+		--env-file apps/freqtrade/.env \
+		-f apps/freqtrade/docker-compose.yml \
+		-f apps/freqtrade/docker-compose.postgres.yml down
+
+.PHONY: build-freqtrade
+build-freqtrade:
+	docker compose \
+		--env-file .env \
+		--env-file apps/freqtrade/.env \
+		-f apps/freqtrade/docker-compose.yml \
+		-f apps/freqtrade/docker-compose.postgres.yml build --no-cache
+
 
 # =============================================================
 # Aggregate Commands

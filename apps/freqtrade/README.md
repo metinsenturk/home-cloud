@@ -29,6 +29,23 @@ docker compose --env-file ../../.env --env-file .env -f docker-compose.yml up -d
 
 ```bash
 make up-freqtrade
+
+### PostgreSQL Option:
+
+By default, Freqtrade uses SQLite. For PostgreSQL support (recommended for production or multiple bots):
+
+```bash
+# From root folder
+make up-freqtrade-postgres
+```
+
+See [POSTGRES.md](POSTGRES.md) for complete PostgreSQL setup documentation, including:
+- Architecture and how it works
+- Configuration requirements
+- Database management commands
+- SQLite vs PostgreSQL comparison
+- Migration between databases
+- Troubleshooting
 ```
 
 ## Automatic Initialization (Entrypoint Override)
@@ -94,6 +111,25 @@ user_data/
 ├── backtest_results/    # Backtesting output
 ├── data/                # Downloaded historical OHLCV data
 └── logs/                # Bot logs
+
+### Database Configuration
+
+Freqtrade supports two database backends:
+
+**SQLite (Default):**
+- ✅ Zero configuration, works out of the box
+- ✅ Single file database: `user_data/tradesv3.sqlite`
+- ✅ Sufficient for single-bot deployments
+- ✅ Command: `make up-freqtrade`
+
+**PostgreSQL (Optional):**
+- ✅ Better for production and high-volume trading
+- ✅ Supports multiple bot instances sharing database
+- ✅ Full SQL client access for analytics
+- ✅ Command: `make up-freqtrade-postgres`
+- 📖 See [POSTGRES.md](POSTGRES.md) for complete setup guide
+
+Both options use the same entrypoint automation and configuration—only the database backend differs.
 ```
 
 ### Important Environment Variables

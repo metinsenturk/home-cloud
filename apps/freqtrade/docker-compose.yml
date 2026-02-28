@@ -1,26 +1,4 @@
 services:
-  # freqtrade-postgres:
-  #   image: postgres:latest
-  #   container_name: freqtrade_postgres
-  #   restart: unless-stopped
-  #   networks:
-  #     - home_freqtrade_network
-  #   volumes:
-  #     - home_freqtrade_postgres_data:/var/lib/postgresql/data
-  #   environment:
-  #     POSTGRES_USER: ${FREQTRADE_POSTGRES_USER}
-  #     POSTGRES_PASSWORD: ${FREQTRADE_POSTGRES_PASSWORD}
-  #     POSTGRES_DB: ${FREQTRADE_POSTGRES_DB}
-  #   logging:
-  #     driver: json-file
-  #     options:
-  #       max-size: "10m"
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U $$FREQTRADE_POSTGRES_USER -d $$FREQTRADE_POSTGRES_DB"]
-  #     interval: 1m
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 30s
 
   freqtrade:
     image: freqtradeorg/freqtrade:latest
@@ -102,5 +80,3 @@ networks:
 volumes:
   home_freqtrade_data:
     name: home_freqtrade_data
-  # home_freqtrade_postgres_data:
-  #   name: home_freqtrade_postgres_data

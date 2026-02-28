@@ -1,0 +1,53 @@
+# PostgreSQL-enabled Freqtrade Configuration
+#
+# This compose file extends docker-compose.yml to add PostgreSQL database support.
+# It replaces SQLite with a dedicated PostgreSQL instance.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d
+#   Or use: make up-freqtrade-postgres (if defined in Makefile)
+
+services:
+  # PostgreSQL Database Service
+  freqtrade-postgres:
+    image: postgres:16-alpine
+    container_name: freqtrade_postgres
+    restart: unless-stopped
+    networks:
+      - home_freqtrade_network
+    volumes:
+      - home_freqtrade_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${FREQTRADE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${FREQTRADE_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${FREQTRADE_POSTGRES_DB}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      # Use $$ for container-level variable expansion (not compose-time expansion)
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Freqtrade Service Overrides
+  freqtrade:
+    # Build custom image with psycopg2-binary instead of using official image
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Override database connection to use PostgreSQL
+    environment:
+      FREQTRADE__DB_URL: postgresql://${FREQTRADE_POSTGRES_USER}:${FREQTRADE_POSTGRES_PASSWORD}@freqtrade-postgres:5432/${FREQTRADE_POSTGRES_DB}
+    # Wait for PostgreSQL to be healthy before starting freqtrade
+    depends_on:
+      freqtrade-postgres:
+        condition: service_healthy
+
+# Define PostgreSQL data volume
+volumes:
+  home_freqtrade_postgres_data:
+    name: home_freqtrade_postgres_data
