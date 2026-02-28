@@ -11,6 +11,7 @@
 #   - Docker Compose v2 (docker compose, not docker-compose)
 #   - bash shell (for command execution)
 #   - yq (optional, required only for GROUPS_BACKEND=yaml)
+#   - bats-core (optional, required only for make test-makefile)
 #
 # Command Language:
 #   All commands use bash shell syntax. The Makefile recipes execute
@@ -57,6 +58,7 @@
 #   make check-validity APP=app_name # Validates a compose file for an app
 #   make up-base                     # Launches base services (Traefik, Dozzle, WUD)
 #   make up-all                      # Launches all services
+#   make test-makefile               # Runs unit-like tests for Makefile commands
 #   make list-groups                 # Lists available custom app groups
 #   make init-groups                 # Creates group config file from example
 #   make clean-groups                # Removes group config file
@@ -140,6 +142,16 @@ check-validity:
 	@docker compose -f apps/$(APP)/docker-compose.yml config > /dev/null 2>&1 && \
 		echo "✓ $(APP) compose file is valid" || \
 		(echo "✗ $(APP) compose file is invalid" && exit 1)
+
+.PHONY: test-makefile
+test-makefile:
+	@# Runs unit-like Makefile tests using bats and local mocks.
+	@if ! command -v bats > /dev/null 2>&1; then \
+		echo "✗ Error: bats is required. Install bats-core to run tests."; \
+		echo "  Ubuntu/WSL: sudo apt-get install -y bats"; \
+		exit 1; \
+	fi
+	@bats tests/makefile_groups.bats
 
 .PHONY: init-groups
 init-groups:

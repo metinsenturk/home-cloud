@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -e
+
+query=""
+file=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -r)
+      shift
+      query="$1"
+      ;;
+    *)
+      file="$1"
+      ;;
+  esac
+  shift
+done
+
+if [[ "$query" == ".groups | keys[]" ]]; then
+  sed -n 's/^  \([A-Za-z0-9_-]*\):$/\1/p' "$file"
+  exit 0
+fi
+
+group="$(printf '%s' "$query" | sed -n 's/\.groups\["\([^"]*\)"\]\[\]\?/\1/p')"
+
+if [[ -n "$group" ]]; then
+  awk -v grp="$group" '
+    $0 ~ "^  " grp ":" { in_group = 1; next }
+    in_group && $0 ~ "^  [A-Za-z0-9_-]+:" { in_group = 0 }
+    in_group && $0 ~ "^    - " { sub("^    - ", ""); print }
+  ' "$file"
+  exit 0
+fi
+
+exit 0
