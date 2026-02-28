@@ -1,0 +1,38 @@
+services:
+  infra-redis:
+    image: redis:latest
+    container_name: infra_redis
+    restart: unless-stopped
+    networks:
+      - home_network
+      - home_infra_redis_network
+    ports:
+      - "6379:6379"
+    volumes:
+      - home_infra_redis_data:/data
+    labels:
+      - "traefik.enable=false"
+    environment:
+      - TZ=${TZ}
+    command: redis-server --requirepass ${INFRA_REDIS_PASSWORD} --appendonly yes
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "${INFRA_REDIS_PASSWORD}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+networks:
+  home_network:
+    external: true
+  home_infra_redis_network:
+    name: home_infra_redis_network
+    driver: bridge
+
+volumes:
+  home_infra_redis_data:
+    name: home_infra_redis_data

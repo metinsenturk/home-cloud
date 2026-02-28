@@ -740,6 +740,20 @@ down-infra-mongodb:
 		--env-file apps/infra_mongodb/.env \
 		-f apps/infra_mongodb/docker-compose.yml down
 
+.PHONY: up-infra-redis
+up-infra-redis: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/infra_redis/.env \
+		-f apps/infra_redis/docker-compose.yml up -d
+
+.PHONY: down-infra-redis
+down-infra-redis:
+	docker compose \
+		--env-file .env \
+		--env-file apps/infra_redis/.env \
+		-f apps/infra_redis/docker-compose.yml down
+
 .PHONY: up-mage
 up-mage: create-network
 	docker compose \
