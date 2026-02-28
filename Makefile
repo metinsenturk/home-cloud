@@ -656,6 +656,20 @@ down-jupyter:
 		--env-file apps/jupyter/.env \
 		-f apps/jupyter/docker-compose.yml down
 
+.PHONY: up-lowdefy
+up-lowdefy: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/lowdefy/.env \
+		-f apps/lowdefy/docker-compose.yml up -d
+
+.PHONY: down-lowdefy
+down-lowdefy:
+	docker compose \
+		--env-file .env \
+		--env-file apps/lowdefy/.env \
+		-f apps/lowdefy/docker-compose.yml down
+
 .PHONY: up-marimo
 up-marimo: create-network
 	docker compose \

@@ -1,0 +1,75 @@
+lowdefy: 4.5.2
+
+name: My Lowdefy App
+
+# This is a starter configuration for Lowdefy
+# Customize this file to build your low-code applications
+
+pages:
+  - id: welcome
+    type: PageHeaderMenu
+    properties:
+      title: Welcome to Lowdefy
+    blocks:
+      - id: content_card
+        type: Card
+        blocks:
+          - id: welcome_title
+            type: Title
+            properties:
+              content: 🚀 Your Lowdefy App is Running!
+              level: 2
+          
+          - id: welcome_paragraph
+            type: Paragraph
+            properties:
+              content: |
+                Lowdefy is a low-code framework for building internal tools, admin panels, and dashboards.
+                
+                **Getting Started:**
+                - Edit `config/lowdefy.yaml` to customize this app
+                - Add pages, components, and connect to databases
+                - Visit the [official documentation](https://docs.lowdefy.com) for guides
+          
+          - id: features_title
+            type: Title
+            properties:
+              content: Key Features
+              level: 3
+          
+          - id: features_list
+            type: Markdown
+            properties:
+              content: |
+                - 📝 **YAML Configuration**: Define your entire app with simple YAML
+                - 🎨 **Pre-built Components**: Use 50+ ready-to-use UI components
+                - 🔌 **Database Connections**: Connect to PostgreSQL, MongoDB, MySQL, and more
+                - 🔐 **Authentication**: Built-in auth providers (Auth0, OpenID, etc.)
+                - 📊 **Data Visualization**: Charts, graphs, and tables out of the box
+                - 🚀 **Quick Deploy**: Deploy changes by restarting the container
+          
+          - id: next_steps_title
+            type: Title
+            properties:
+              content: Next Steps
+              level: 3
+          
+          - id: next_steps_list
+            type: List
+            properties:
+              dataSource:
+                - Explore the Lowdefy documentation
+                - Connect to your databases (PostgreSQL, MongoDB, etc.)
+                - Add authentication providers
+                - Create your first form or dashboard
+                - Deploy your custom application
+
+menus:
+  - id: default
+    links:
+      - id: welcome_link
+        type: MenuLink
+        properties:
+          title: Home
+          icon: HomeOutlined
+        pageId: welcome
