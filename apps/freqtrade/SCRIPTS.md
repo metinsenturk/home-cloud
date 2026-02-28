@@ -80,6 +80,137 @@ Edit [entrypoint.py](entrypoint.py) and change:
 ENABLE_STRATEGY_DOWNLOAD = False  # Skips strategy downloads during initialization
 ```
 
+## 3. check_database.py
+
+**Purpose**: Verify which database backend Freqtrade is currently using (**PostgreSQL** or **SQLite**) and run lightweight health/data checks.
+
+**File**: [check_database.py](check_database.py)
+
+### Where this script runs
+
+This script is designed to run on the **host machine** (your WSL shell / terminal), **not inside the container**.
+
+- ✅ Run from host: `python3 apps/freqtrade/check_database.py`
+- ❌ Do not run inside `freqtrade` container as primary workflow
+
+Why host-side?
+- The script orchestrates Docker CLI calls (`docker ps`, `docker exec`) to inspect containers.
+- It must be able to talk to the Docker daemon from outside the target containers.
+
+### What it checks
+
+1. Confirms `freqtrade` container is running.
+2. Reads active DB URL from container env: `FREQTRADE__DB_URL`.
+3. Detects backend from URL:
+         - `postgresql://...` → PostgreSQL branch
+         - `sqlite://...` → SQLite branch
+4. Runs backend-specific checks:
+         - PostgreSQL: connection session, table list, row counts (`trades`, `orders`)
+         - SQLite: table list and row counts from `tradesv3.sqlite`
+
+### How to run
+
+From repository root:
+
+```bash
+python3 apps/freqtrade/check_database.py
+```
+
+Optional (from app folder):
+
+```bash
+cd apps/freqtrade
+python3 check_database.py
+```
+
+### Command anatomy (what the script executes)
+
+The script uses `docker exec <container> sh -lc "..."` to run shell commands inside containers.
+
+#### 1) Read active DB URL from freqtrade container
+
+```bash
+docker exec freqtrade sh -lc 'echo "$FREQTRADE__DB_URL"'
+```
+
+- `docker exec freqtrade`: run command in running `freqtrade` container
+- `sh -lc`: run in shell with login-style command parsing
+- `echo "$FREQTRADE__DB_URL"`: prints effective DB URL currently used by the bot
+
+#### 2) PostgreSQL checks via psql
+
+Session check:
+
+```bash
+docker exec freqtrade_postgres sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT current_database(), current_user;"'
+```
+
+Table list:
+
+```bash
+docker exec freqtrade_postgres sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT table_name FROM information_schema.tables WHERE table_schema=\'public\' ORDER BY table_name;"'
+```
+
+Trades count:
+
+```bash
+docker exec freqtrade_postgres sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT count(*) FROM trades;"'
+```
+
+Notes on `psql` flags:
+- `-U`: PostgreSQL username
+- `-d`: database name
+- `-c`: execute one SQL statement and exit
+
+#### 3) SQLite checks via sqlite3
+
+```bash
+docker exec freqtrade sh -lc 'sqlite3 /freqtrade/user_data/tradesv3.sqlite ".tables"'
+docker exec freqtrade sh -lc 'sqlite3 /freqtrade/user_data/tradesv3.sqlite "SELECT count(*) FROM trades;"'
+```
+
+### Example output
+
+```text
+=== Freqtrade Database Check ===
+Backend: PostgreSQL
+DB URL : postgresql://postgres:postgres@freqtrade-postgres:5432/freqtrade
+
+[Session]
+database  | username
+-----------+----------
+freqtrade | postgres
+
+[Trades Count]
+trades_count
+------------
+3
+```
+
+### Exit behavior
+
+- Exit code `0`: checks passed
+- Exit code `1`: container missing, unsupported backend, or query failure
+
+This makes it suitable for automation (CI checks, scripts, cron wrappers).
+
+### Troubleshooting
+
+- **`freqtrade` container is not running**
+        - Start stack first: `make up-freqtrade` or `make up-freqtrade-postgres`
+
+- **`freqtrade_postgres` not running while backend is PostgreSQL**
+        - Start PostgreSQL stack: `make up-freqtrade-postgres`
+
+- **`psql command failed`**
+        - Check Postgres logs: `docker logs freqtrade_postgres`
+        - Verify DB env vars in `apps/freqtrade/.env`
+
+- **`sqlite3 command failed`**
+        - Ensure SQLite DB file exists at `/freqtrade/user_data/tradesv3.sqlite`
+        - Check freqtrade logs: `docker logs freqtrade`
+
+
 ## Initialization Flow Diagram
 
 On **first container start**, this is the complete execution flow:
