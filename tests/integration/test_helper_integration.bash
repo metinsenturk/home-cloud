@@ -25,6 +25,12 @@ integration_setup_common() {
   # Default: quick (recommend full in CI)
   export RUN_INTEGRATION_TIER=${RUN_INTEGRATION_TIER:-quick}
 
+  # Timing diagnostics for performance analysis.
+  # Set to 1 to report how long each container takes to become healthy.
+  # Output: ⏱️  'container_name' healthy in 15s
+  # Usage: INTEGRATION_TIMING_REPORT=1 make test-makefile-integration-full
+  export INTEGRATION_TIMING_REPORT=${INTEGRATION_TIMING_REPORT:-0}
+
   if [[ "${RUN_INTEGRATION:-0}" != "1" ]]; then
     skip "Integration tests are disabled. Run with RUN_INTEGRATION=1."
   fi
@@ -69,10 +75,22 @@ require_containers_absent_or_skip() {
   fi
 }
 
+report_container_timing() {
+  local container_name="$1"
+  local elapsed_seconds="$2"
+  local status="${3:-ready}"
+  
+  # Report timing diagnostics. Enable verbose timing output with:
+  #   INTEGRATION_TIMING_REPORT=1 make test-makefile-integration
+  if [ "${INTEGRATION_TIMING_REPORT:-0}" = "1" ]; then
+    echo "⏱️  '$container_name' ${status} in ${elapsed_seconds}s" >&3
+  fi
+}
+
 wait_for_container_healthy_or_running() {
   local container_name="$1"
   local timeout_seconds="${2:-120}"
-  local start_epoch current_epoch state
+  local start_epoch current_epoch state elapsed_seconds
 
   start_epoch="$(date +%s)"
   while true; do
@@ -81,9 +99,13 @@ wait_for_container_healthy_or_running() {
     else
       state="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container_name" 2>/dev/null || true)"
       if [ "$state" = "healthy" ] || [ "$state" = "running" ]; then
+        elapsed_seconds=$(($(date +%s) - start_epoch))
+        report_container_timing "$container_name" "$elapsed_seconds" "healthy"
         return 0
       fi
       if [ "$state" = "unhealthy" ] || [ "$state" = "exited" ] || [ "$state" = "dead" ]; then
+        elapsed_seconds=$(($(date +%s) - start_epoch))
+        report_container_timing "$container_name" "$elapsed_seconds" "failed"
         return 1
       fi
       sleep 2
@@ -91,6 +113,8 @@ wait_for_container_healthy_or_running() {
 
     current_epoch="$(date +%s)"
     if [ $((current_epoch - start_epoch)) -ge "$timeout_seconds" ]; then
+      elapsed_seconds=$((current_epoch - start_epoch))
+      report_container_timing "$container_name" "$elapsed_seconds" "timed-out"
       return 1
     fi
   done

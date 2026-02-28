@@ -97,6 +97,40 @@ INTEGRATION_TEST_TIMEOUT=300 INTEGRATION_TEST_TIMEOUT_SLOW=600 \
   RUN_INTEGRATION=1 make test-makefile-integration
 ```
 
+### Performance Analysis: Container Startup Timing
+
+When running full integration tests, you can collect timing data to identify which apps are slow on your system. This helps tune timeout values and understand hardware-specific performance.
+
+```bash
+# Collect startup times for each container
+INTEGRATION_TIMING_REPORT=1 RUN_INTEGRATION=1 make test-makefile-integration-full
+```
+
+Output example:
+```
+⏱️  'blinko' healthy in 8s
+⏱️  'infra_postgres' healthy in 12s
+⏱️  'freqtrade' healthy in 45s
+```
+
+**Interpreting results:**
+- **< 10s**: Fast, typical for stateless apps
+- **10-30s**: Normal, typical for databases with initialization
+- **30-60s+**: Slow, consider increasing `INTEGRATION_TEST_TIMEOUT_SLOW` on slow systems
+
+**For slow system tuning:**
+
+```bash
+# Collect timing on your hardware
+INTEGRATION_TIMING_REPORT=1 RUN_INTEGRATION=1 RUN_INTEGRATION_TIER=full \
+  make test-makefile-integration-full 2>&1 | grep "⏱️"
+
+# Then adjust timeouts for your system
+INTEGRATION_TEST_TIMEOUT=300 INTEGRATION_TEST_TIMEOUT_SLOW=600 \
+  INTEGRATION_TIMING_REPORT=1 RUN_INTEGRATION=1 \
+  make test-makefile-integration-full
+```
+
 ### All tests
 
 Run unit tests only (default, fast):
@@ -143,6 +177,7 @@ RUN_INTEGRATION=1 RUN_INTEGRATION_TIER=full make test-makefile-all
 - Integration tests run against real Docker resources and are gated by `RUN_INTEGRATION=1`.
 - Integration tests skip disruptive lifecycle checks when target base containers already exist.
 - **Integration tests are slow**: App lifecycle tests (phase 4) involve container startup and healthcheck waits (30-180s per test). On slower systems or with containers taking longer to become healthy, tests may timeout or require manual intervention.
+- **Performance diagnostics**: Use `INTEGRATION_TIMING_REPORT=1` to collect startup times for each container. Identify slow apps and tune `INTEGRATION_TEST_TIMEOUT` variables accordingly.
 - Coverage includes:
 	- Group command lifecycle and backend behavior (`init-groups`, `clean-groups`, `list-groups`, `up/down-group-*`, aliases)
 	- Core utility commands (`create-network`, `check-validity`)
