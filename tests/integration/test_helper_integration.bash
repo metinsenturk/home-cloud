@@ -13,6 +13,12 @@ integration_setup_common() {
   export INTEGRATION_MAKE_BIN
   INTEGRATION_MAKE_BIN="$(command -v make)"
 
+  # Configurable timeout for container health checks (in seconds).
+  # Default: 180s for normal apps, 300s for slow builds (freqtrade, etc.)
+  # Override: INTEGRATION_TEST_TIMEOUT=300 make test-makefile-integration
+  export INTEGRATION_TEST_TIMEOUT=${INTEGRATION_TEST_TIMEOUT:-180}
+  export INTEGRATION_TEST_TIMEOUT_SLOW=${INTEGRATION_TEST_TIMEOUT_SLOW:-300}
+
   if [[ "${RUN_INTEGRATION:-0}" != "1" ]]; then
     skip "Integration tests are disabled. Run with RUN_INTEGRATION=1."
   fi

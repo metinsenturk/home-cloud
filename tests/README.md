@@ -63,6 +63,22 @@ or
 make test-makefile-integration RUN_INTEGRATION=1
 ```
 
+### Configuring Integration Test Timeouts
+
+Container startup and healthcheck waits vary by system performance. Override timeouts with environment variables:
+
+```bash
+# Standard timeout (default 180s) - use for slow systems or internet
+INTEGRATION_TEST_TIMEOUT=300 RUN_INTEGRATION=1 make test-makefile-integration
+
+# Separate timeout for slow builds like freqtrade-postgres (default 300s)
+INTEGRATION_TEST_TIMEOUT_SLOW=600 RUN_INTEGRATION=1 make test-makefile-integration
+
+# Override both at once
+INTEGRATION_TEST_TIMEOUT=300 INTEGRATION_TEST_TIMEOUT_SLOW=600 \
+  RUN_INTEGRATION=1 make test-makefile-integration
+```
+
 ### All tests
 
 ```bash

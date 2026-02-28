@@ -54,11 +54,11 @@ teardown() {
   [[ "$output" == *"Base services launched."* ]]
   INTEGRATION_BASE_STACK_STARTED=1
 
-  run wait_for_container_healthy_or_running traefik 180
+  run wait_for_container_healthy_or_running traefik "$INTEGRATION_TEST_TIMEOUT"
   [ "$status" -eq 0 ]
-  run wait_for_container_healthy_or_running dozzle 180
+  run wait_for_container_healthy_or_running dozzle "$INTEGRATION_TEST_TIMEOUT"
   [ "$status" -eq 0 ]
-  run wait_for_container_healthy_or_running wud 180
+  run wait_for_container_healthy_or_running wud "$INTEGRATION_TEST_TIMEOUT"
   [ "$status" -eq 0 ]
 
   run run_make_repo down-base
@@ -81,10 +81,10 @@ teardown() {
   [[ "$output" == *"Base services recreated."* ]]
   INTEGRATION_BASE_STACK_STARTED=1
 
-  run wait_for_container_healthy_or_running traefik 180
+  run wait_for_container_healthy_or_running traefik "$INTEGRATION_TEST_TIMEOUT"
   [ "$status" -eq 0 ]
-  run wait_for_container_healthy_or_running dozzle 180
+  run wait_for_container_healthy_or_running dozzle "$INTEGRATION_TEST_TIMEOUT"
   [ "$status" -eq 0 ]
-  run wait_for_container_healthy_or_running wud 180
+  run wait_for_container_healthy_or_running wud "$INTEGRATION_TEST_TIMEOUT"
   [ "$status" -eq 0 ]
 }

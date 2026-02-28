@@ -50,7 +50,7 @@ teardown() {
   INTEGRATION_APP_STARTED=1
 
   # Wait for container to be healthy/running
-  run wait_for_container_healthy_or_running blinko 180
+  run wait_for_container_healthy_or_running blinko "$INTEGRATION_TEST_TIMEOUT"
   [ "$status" -eq 0 ]
 
   # Explicitly verify healthcheck is "healthy" (strict validation)
@@ -90,7 +90,7 @@ teardown() {
   INTEGRATION_APP_STARTED=1
 
   # Wait for container to be healthy/running
-  run wait_for_container_healthy_or_running infra_postgres 180
+  run wait_for_container_healthy_or_running infra_postgres "$INTEGRATION_TEST_TIMEOUT"
   [ "$status" -eq 0 ]
 
   # Explicitly verify healthcheck is "healthy" (strict check)
@@ -136,7 +136,7 @@ teardown() {
   INTEGRATION_APP_STARTED=1
 
   # Wait for container to be healthy/running
-  run wait_for_container_healthy_or_running freqtrade 300
+  run wait_for_container_healthy_or_running freqtrade "$INTEGRATION_TEST_TIMEOUT_SLOW"
   [ "$status" -eq 0 ]
 
   # Explicitly verify healthcheck is "healthy" (strict validation)
