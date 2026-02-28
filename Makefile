@@ -1,5 +1,57 @@
 # Essential Makefile for Self-Hosted Modular Infrastructure
-
+#
+# Overview:
+#   This Makefile orchestrates a modular Docker Compose-based infrastructure
+#   where each application lives in its own directory under apps/ and can be
+#   launched independently or in custom groups.
+#
+# Requirements:
+#   - GNU Make (3.81+)
+#   - Docker Engine (20.10+)
+#   - Docker Compose v2 (docker compose, not docker-compose)
+#   - bash shell (for command execution)
+#   - yq (optional, required only for GROUPS_BACKEND=yaml)
+#
+# Command Language:
+#   All commands use bash shell syntax. The Makefile recipes execute
+#   shell scripts with conditionals, loops, and Docker Compose commands.
+#
+# Environment:
+#   - All apps require a root .env file and an app-specific .env file
+#   - Variables from root .env are loaded first, then app .env overrides
+#   - The docker compose --env-file flag is used for variable injection
+#
+# Network Architecture:
+#   - All services connect to an external bridge network: home_network
+#   - Traefik (reverse proxy) routes traffic based on subdomain labels
+#   - Apps define their own internal networks when needed
+#
+# Working Directory:
+#   ALL make commands MUST be run from the repository root directory.
+#   The Makefile expects the following structure:
+#     .
+#     ├── Makefile          (this file)
+#     ├── .env              (root environment variables)
+#     ├── apps/             (application directories)
+#     │   ├── traefik/
+#     │   ├── blinko/
+#     │   └── ...
+#     ├── groups.mk         (optional, custom app groups)
+#     └── groups.yaml       (optional, custom app groups)
+#
+#   Example:
+#     cd /path/to/home-cloud    # Navigate to repository root
+#     make up-base              # Run commands from here
+#
+#
+# Quick Start:
+#   1. Ensure Docker and Docker Compose are installed
+#   2. Create .env files (see .env.example)
+#   3. Run: make create-network
+#   4. Run: make up-base (starts Traefik, Dozzle, WUD)
+#   5. Run: make up-<appname> to launch individual apps
+#   6. Optional: make init-groups to enable custom app grouping
+#
 # Usage:
 #   make create-network              # Creates the home_network if it doesn't exist
 #   make check-validity APP=app_name # Validates a compose file for an app
