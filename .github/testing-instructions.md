@@ -85,6 +85,30 @@ When a **new test file** is created, it must start with a top-level explanatory 
 - Do not mutate repository state directly outside expected lifecycle/cleanup.
 - Ensure line ending safety (CRLF issues are handled by test helper).
 
+### 6) Integration Test Optimization Patterns
+
+For integration tests that start/stop real containers, several optimization patterns are available:
+
+**Timeout Configuration:**
+- Set `INTEGRATION_TEST_TIMEOUT` (default: 180s) for standard services
+- Set `INTEGRATION_TEST_TIMEOUT_SLOW` (default: 300s) for slow-starting services (databases, heavy apps)
+
+**Test Tier Stratification:**
+- `RUN_INTEGRATION_TIER=quick` (default): Runs fast validation tests (~30-60s total)
+- `RUN_INTEGRATION_TIER=full`: Runs complete lifecycle tests (~3-5 min, opt-in)
+- Quick tier tests container startup only; full tier tests complete up/down/cleanup cycles
+
+**Parallel Execution:**
+- Set `BATS_PARALLEL=1` to enable parallel test execution (requires GNU parallel)
+- Safe for quick tier tests (minimal resource contention)
+- Not recommended for full tier (lifecycle tests have resource conflicts)
+
+**Performance Diagnostics:**
+- Set `INTEGRATION_TIMING_REPORT=1` to see per-container startup times
+- Helps identify slow services and optimize timeout values
+
+See `tests/README.md` for detailed usage examples and safety guidelines.
+
 ## What to Test for New Makefile Targets
 
 When adding a new target, include tests for relevant items:

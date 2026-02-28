@@ -63,6 +63,29 @@ parallel --version
 
 If `GNU parallel` is not installed, `BATS_PARALLEL=1` or `--jobs` flag will be silently ignored and tests run sequentially (no error).
 
+## Validate dependencies
+
+Check which testing tools are available on your system:
+
+```bash
+make check-tools
+```
+
+This command displays:
+- **Required tools:** `docker`, `docker compose`, `make`, `bash` (must be present)
+- **Optional tools:** `bats`, `GNU parallel`, `yq`, `git` (helpful but not blocking)
+
+Example output:
+```
+✔ docker: /usr/bin/docker
+✔ make: /usr/bin/make
+✔ bash: /usr/bin/bash
+✔ bats: /usr/bin/bats
+✘ parallel: not found (optional - needed for BATS_PARALLEL=1)
+✘ yq: not found (optional)
+✔ git: /usr/bin/git
+```
+
 ## Run tests
 
 ### Unit-like tests (default)

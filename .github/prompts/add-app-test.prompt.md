@@ -5,6 +5,7 @@ description: Add or update Makefile tests for a specific app target using table-
 
 > **Prompt Notes**
 > - Purpose: Add/update app-target Makefile tests with consistent table-driven coverage.
+> - Scope: Unit-like tests only (mocked Docker). Integration tests are separate (see `tests/integration/`).
 > - Default suite: `tests/makefile_app_commands.bats` unless scope requires another suite.
 > - Completion rule: Update inline section comments/examples to match final test rows.
 
