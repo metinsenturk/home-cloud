@@ -1,0 +1,23 @@
+# Custom app groups (yaml backend with yq)
+#
+# Usage:
+# 1) Install yq
+# 2) Copy this file to groups.yaml
+# 3) Run with GROUPS_BACKEND=yaml, e.g.:
+#    make list-groups GROUPS_BACKEND=yaml
+#    make up-group-favorites GROUPS_BACKEND=yaml
+#    make down-group-favorites GROUPS_BACKEND=yaml
+
+groups:
+  favorites:
+    - blinko
+    - glance
+    - jupyter
+  finance:
+    - freqtrade
+    - metabase
+    - nocodb
+  school:
+    - vscode
+    - datasette
+    - marimo

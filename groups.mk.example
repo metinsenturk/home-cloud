@@ -1,0 +1,17 @@
+# Custom app groups (dependency-free backend)
+#
+# Usage:
+# 1) Copy this file to groups.mk
+# 2) Keep GROUPS_BACKEND=make (default) in Makefile
+# 3) Run: make list-groups
+# 4) Run: make up-group-favorites
+# 5) Run: make down-group-favorites
+
+# Declare all group names here (space-separated)
+GROUPS := favorites finance school
+
+# Group definitions. Use underscores in variable names.
+# Command name can still use dashes, e.g. up-group-home-lab maps to GROUP_home_lab.
+GROUP_favorites := blinko glance jupyter
+GROUP_finance := freqtrade metabase nocodb
+GROUP_school := vscode datasette marimo

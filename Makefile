@@ -5,8 +5,54 @@
 #   make check-validity APP=app_name # Validates a compose file for an app
 #   make up-base                     # Launches base services (Traefik, Dozzle, WUD)
 #   make up-all                      # Launches all services
+#   make list-groups                 # Lists available custom app groups
+#   make up-group-favorites          # Launches apps from a custom group
+#   make down-group-favorites        # Stops apps from a custom group
+#
+# Custom group backends:
+#   GROUPS_BACKEND=make (default, no dependency)
+#     - Reads groups from GROUPS_MAKE_FILE (default: groups.mk)
+#     - Expects:
+#         GROUPS := favorites finance
+#         GROUP_favorites := blinko glance
+#         GROUP_finance := freqtrade metabase
+#
+#   GROUPS_BACKEND=yaml (requires yq)
+#     - Reads groups from GROUPS_YAML_FILE (default: groups.yaml)
+#     - Expects:
+#         groups:
+#           favorites: [blinko, glance]
+#           finance: [freqtrade, metabase]
+#
+# Examples:
+#   make list-groups
+#   make up-group-favorites
+#   make down-group-favorites
+#   make list-groups GROUPS_BACKEND=yaml
+#   make up-group-favorites GROUPS_BACKEND=yaml GROUPS_YAML_FILE=groups.yaml
 
 NETWORK_NAME=home_network
+
+# Supported values: make | yaml
+# - make: dependency-free mode using a Make include file
+# - yaml: YAML mode parsed by yq
+GROUPS_BACKEND?=make
+
+# Path to YAML group config (used only when GROUPS_BACKEND=yaml)
+GROUPS_YAML_FILE?=groups.yaml
+
+# Path to Make group config (used only when GROUPS_BACKEND=make)
+GROUPS_MAKE_FILE?=groups.mk
+
+# Optional include so Make backend works when groups.mk is present.
+# If file is missing, list/execute group targets will return a clear error.
+# Using `-` to prevent Make from erroring out if the file doesn't exist, since it's optional.
+-include $(GROUPS_MAKE_FILE)
+
+# Group names in commands use dashes (up-group-home-lab), while Make
+# variable names commonly use underscores (GROUP_home_lab). This helper
+# maps dashes to underscores before looking up the group variable.
+get_make_group_apps = $(strip $(value GROUP_$(subst -,_,$(1))))
 
 .PHONY: create-network
 create-network:
@@ -35,6 +81,116 @@ check-validity:
 	@docker compose -f apps/$(APP)/docker-compose.yml config > /dev/null 2>&1 && \
 		echo "✓ $(APP) compose file is valid" || \
 		(echo "✗ $(APP) compose file is invalid" && exit 1)
+
+.PHONY: list-groups
+list-groups:
+	@# Lists user-defined group names from the selected backend.
+	@case "$(GROUPS_BACKEND)" in \
+		yaml) \
+			if ! command -v yq > /dev/null 2>&1; then \
+				echo "✗ Error: yq is required for GROUPS_BACKEND=yaml"; \
+				exit 1; \
+			fi; \
+			if [ ! -f "$(GROUPS_YAML_FILE)" ]; then \
+				echo "✗ Error: $(GROUPS_YAML_FILE) not found"; \
+				exit 1; \
+			fi; \
+			echo "Available groups ($(GROUPS_BACKEND)) from $(GROUPS_YAML_FILE):"; \
+			yq -r '.groups | keys[]' "$(GROUPS_YAML_FILE)"; \
+			;; \
+		make) \
+			if [ -z "$(strip $(GROUPS))" ]; then \
+				echo "✗ Error: no groups defined in $(GROUPS_MAKE_FILE)"; \
+				echo "  Define GROUPS and GROUP_<name> variables (see groups.mk.example)."; \
+				exit 1; \
+			fi; \
+			echo "Available groups ($(GROUPS_BACKEND)) from $(GROUPS_MAKE_FILE): $(GROUPS)"; \
+			;; \
+		*) \
+			echo "✗ Error: invalid GROUPS_BACKEND='$(GROUPS_BACKEND)' (use 'make' or 'yaml')"; \
+			exit 1; \
+			;; \
+	esac
+
+.PHONY: up-group-%
+up-group-%:
+	@# Starts all apps inside a named group, in the declared order.
+	@case "$(GROUPS_BACKEND)" in \
+		yaml) \
+			if ! command -v yq > /dev/null 2>&1; then \
+				echo "✗ Error: yq is required for GROUPS_BACKEND=yaml"; \
+				exit 1; \
+			fi; \
+			if [ ! -f "$(GROUPS_YAML_FILE)" ]; then \
+				echo "✗ Error: $(GROUPS_YAML_FILE) not found"; \
+				exit 1; \
+			fi; \
+			apps=$$(yq -r '.groups["$*"][]?' "$(GROUPS_YAML_FILE)"); \
+			if [ -z "$$apps" ]; then \
+				echo "✗ Error: group '$*' not found or empty in $(GROUPS_YAML_FILE)"; \
+				exit 1; \
+			fi; \
+			for app in $$apps; do \
+				echo "→ Starting $$app"; \
+				$(MAKE) up-$$app || exit $$?; \
+			done; \
+			;; \
+		make) \
+			apps="$(call get_make_group_apps,$*)"; \
+			if [ -z "$$apps" ]; then \
+				echo "✗ Error: group '$*' not found or empty in $(GROUPS_MAKE_FILE)"; \
+				exit 1; \
+			fi; \
+			for app in $$apps; do \
+				echo "→ Starting $$app"; \
+				$(MAKE) up-$$app || exit $$?; \
+			done; \
+			;; \
+		*) \
+			echo "✗ Error: invalid GROUPS_BACKEND='$(GROUPS_BACKEND)' (use 'make' or 'yaml')"; \
+			exit 1; \
+			;; \
+	esac
+
+.PHONY: down-group-%
+down-group-%:
+	@# Stops all apps inside a named group, in the declared order.
+	@case "$(GROUPS_BACKEND)" in \
+		yaml) \
+			if ! command -v yq > /dev/null 2>&1; then \
+				echo "✗ Error: yq is required for GROUPS_BACKEND=yaml"; \
+				exit 1; \
+			fi; \
+			if [ ! -f "$(GROUPS_YAML_FILE)" ]; then \
+				echo "✗ Error: $(GROUPS_YAML_FILE) not found"; \
+				exit 1; \
+			fi; \
+			apps=$$(yq -r '.groups["$*"][]?' "$(GROUPS_YAML_FILE)"); \
+			if [ -z "$$apps" ]; then \
+				echo "✗ Error: group '$*' not found or empty in $(GROUPS_YAML_FILE)"; \
+				exit 1; \
+			fi; \
+			for app in $$apps; do \
+				echo "→ Stopping $$app"; \
+				$(MAKE) down-$$app || exit $$?; \
+			done; \
+			;; \
+		make) \
+			apps="$(call get_make_group_apps,$*)"; \
+			if [ -z "$$apps" ]; then \
+				echo "✗ Error: group '$*' not found or empty in $(GROUPS_MAKE_FILE)"; \
+				exit 1; \
+			fi; \
+			for app in $$apps; do \
+				echo "→ Stopping $$app"; \
+				$(MAKE) down-$$app || exit $$?; \
+			done; \
+			;; \
+		*) \
+			echo "✗ Error: invalid GROUPS_BACKEND='$(GROUPS_BACKEND)' (use 'make' or 'yaml')"; \
+			exit 1; \
+			;; \
+	esac
 
 # =============================================================
 # Base Services (Traefik, Dozzle, WUD)
