@@ -226,6 +226,14 @@ make init-groups
 ```
 Creates `groups.mk` from `groups.mk.example` (default backend).
 
+You can set the default backend globally in root `.env`:
+```env
+HOME_CLOUD_GROUPS_BACKEND=make
+# or
+HOME_CLOUD_GROUPS_BACKEND=yaml
+```
+Precedence order is: command-line `GROUPS_BACKEND=...` → process environment `GROUPS_BACKEND` → `.env` (`HOME_CLOUD_GROUPS_BACKEND`) → fallback `make`.
+
 **Or use YAML format (recommended for readability):**
 ```bash
 make init-groups GROUPS_BACKEND=yaml

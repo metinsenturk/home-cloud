@@ -103,7 +103,14 @@ NETWORK_NAME=home_network
 # Supported values: make | yaml
 # - make: dependency-free mode using a Make include file
 # - yaml: YAML mode parsed by yq
-GROUPS_BACKEND?=make
+#
+# Resolution order:
+#   1) Command line: GROUPS_BACKEND=yaml make list-groups
+#   2) Process environment: export GROUPS_BACKEND=yaml
+#   3) Root .env: HOME_CLOUD_GROUPS_BACKEND=yaml
+#   4) Fallback default: make
+GROUPS_BACKEND_FROM_ENV:=$(strip $(shell sed -n 's/^HOME_CLOUD_GROUPS_BACKEND[[:space:]]*=[[:space:]]*//p' .env 2>/dev/null | sed 's/[[:space:]]*#.*$$//' | tr '[:upper:]' '[:lower:]' | head -n1))
+GROUPS_BACKEND?=$(if $(GROUPS_BACKEND_FROM_ENV),$(GROUPS_BACKEND_FROM_ENV),make)
 
 # Path to YAML group config (used only when GROUPS_BACKEND=yaml)
 GROUPS_YAML_FILE?=groups.yaml
