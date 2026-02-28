@@ -47,6 +47,7 @@ import sys
 import json
 import os
 from pathlib import Path
+from strategy_downloader import download_strategies
 
 # Module-level configuration
 USER_DATA_DIR = Path("/freqtrade/user_data")
@@ -55,6 +56,14 @@ CONFIG_PATH_ARG = str(CONFIG_FILE)
 
 # Log prefix for entrypoint messages
 LOG_PREFIX = "[entrypoint]"
+
+# === STRATEGY DOWNLOAD CONFIGURATION ===
+# Set to True to automatically download official freqtrade strategies on first start
+# If True and no strategies exist, entrypoint will fetch them from:
+#   https://github.com/freqtrade/freqtrade-strategies/tree/main/user_data/strategies
+# Downloaded strategies provide well-tested reference implementations for backtesting/trading
+# Change to False if you want to manage strategies manually
+ENABLE_STRATEGY_DOWNLOAD = True
 
 
 def log(message: str) -> None:
@@ -191,6 +200,13 @@ def initialize_if_needed() -> None:
     # Step 3: Update exchange to avoid geo-restrictions
     if not update_exchange_to_kraken():
         log("Failed to update exchange. Continuing anyway...")
+    
+    # Step 4: Download official strategies (optional, controlled by ENABLE_STRATEGY_DOWNLOAD flag)
+    if ENABLE_STRATEGY_DOWNLOAD:
+        if not download_strategies():
+            log("Failed to download strategies. Continuing anyway...")
+    else:
+        log("Strategy download disabled (ENABLE_STRATEGY_DOWNLOAD=False)")
     
     log("First-time setup complete.")
 

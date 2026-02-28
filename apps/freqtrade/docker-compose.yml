@@ -34,6 +34,8 @@ services:
       # Mount entrypoint.py script (read-only) to override image's default entrypoint
       # This allows automatic initialization of config.json on first start
       - ./entrypoint.py:/entrypoint.py:ro
+      # Mount strategy downloader helper script
+      - ./strategy_downloader.py:/strategy_downloader.py:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.freqtrade.rule=Host(`freqtrade.${DOMAIN}`)"
