@@ -56,6 +56,7 @@
 # Usage:
 #   make create-network              # Creates the home_network if it doesn't exist
 #   make check-validity APP=app_name # Validates a compose file for an app
+#   make check-tools                 # Checks for required and optional dependencies
 #   make up-base                     # Launches base services (Traefik, Dozzle, WUD)
 #   make up-all                      # Launches all services
 #   make test-makefile               # Runs unit-like tests for Makefile commands
@@ -118,6 +119,41 @@ GROUPS_MAKE_FILE?=groups.mk
 # variable names commonly use underscores (GROUP_home_lab). This helper
 # maps dashes to underscores before looking up the group variable.
 get_make_group_apps = $(strip $(value GROUP_$(subst -,_,$(1))))
+
+.PHONY: check-tools
+check-tools:
+	@# Checks for required and optional tools used by this project
+	@echo "Checking dependencies for Mini-Cloud infrastructure..."
+	@echo ""
+	@echo "=== REQUIRED Tools ==="
+	@command -v docker > /dev/null && echo "✓ docker" || echo "✗ docker (MISSING)"
+	@command -v docker compose > /dev/null && echo "✓ docker compose" || echo "✗ docker compose (MISSING)"
+	@command -v make > /dev/null && echo "✓ make" || echo "✗ make (MISSING)"
+	@command -v bash > /dev/null && echo "✓ bash" || echo "✗ bash (MISSING)"
+	@echo ""
+	@echo "=== OPTIONAL Tools ==="
+	@if command -v bats > /dev/null 2>&1; then \
+		echo "✓ bats (testing: make test-makefile)"; \
+	else \
+		echo "✗ bats (optional, for: make test-makefile)"; \
+	fi
+	@if command -v parallel > /dev/null 2>&1; then \
+		echo "✓ GNU parallel (testing: parallel execution with BATS_PARALLEL=1)"; \
+	else \
+		echo "✗ GNU parallel (optional, for parallel test execution)"; \
+	fi
+	@if command -v yq > /dev/null 2>&1; then \
+		echo "✓ yq (optional, for: GROUPS_BACKEND=yaml)"; \
+	else \
+		echo "✗ yq (optional, for YAML group backend)"; \
+	fi
+	@if command -v git > /dev/null 2>&1; then \
+		echo "✓ git (optional, for repository management)"; \
+	else \
+		echo "✗ git (optional, for repository management)"; \
+	fi
+	@echo ""
+	@echo "Tip: Install missing tools with: sudo apt-get install <tool>"
 
 .PHONY: create-network
 create-network:
