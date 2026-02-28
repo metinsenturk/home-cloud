@@ -5,3 +5,8 @@
 # Keep these untracked so each user can maintain personal groups.
 groups.mk
 groups.yaml
+
+# Health check audit reports (local, timestamped)
+# Keep these untracked as they are environment-specific snapshots
+audits/
+!audits/README.md
