@@ -76,19 +76,33 @@ run_and_assert_compose_line() {
 # the mock docker log format. This is intentional, though it looks odd in the editor.
 #
 # Examples explained:
-# - up-traefik: Root .env only (no app-specific .env file)
-# - up-blinko: Root .env + app .env (standard pattern for most apps)
-# - down-blinko: Same env loading as up, but with down command
-# - up-infra-postgres: Infrastructure service with app-specific env
+# - up-traefik: Root .env only (base infrastructure, no app-specific .env)
+# - up-dozzle/up-wud: Root .env only (monitoring services)
+# - down-dozzle: Same pattern but with down command
+# - up-blinko/up-beszel: Root .env + app .env (standard pattern for most apps)
+# - down-blinko/down-beszel: Same env loading, different command
+# - up-infra-*: Infrastructure services (postgres, mssql, mongodb) with app-specific env
+# - up-coder/up-metabase/up-gitlab: Various application types with standard pattern
 
 @test "simple compose targets build expected docker compose commands" {
   while IFS='|' read -r target expected_line; do
     run_and_assert_compose_line "$target" "$expected_line"
   done <<'EOF'
 up-traefik|docker	compose	--env-file	.env	-f	apps/traefik/docker-compose.yml	up	-d
+up-dozzle|docker	compose	--env-file	.env	-f	apps/dozzle/docker-compose.yml	up	-d
+down-dozzle|docker	compose	--env-file	.env	-f	apps/dozzle/docker-compose.yml	down
+up-wud|docker	compose	--env-file	.env	-f	apps/wud/docker-compose.yml	up	-d
 up-blinko|docker	compose	--env-file	.env	--env-file	apps/blinko/.env	-f	apps/blinko/docker-compose.yml	up	-d
 down-blinko|docker	compose	--env-file	.env	--env-file	apps/blinko/.env	-f	apps/blinko/docker-compose.yml	down
+up-beszel|docker	compose	--env-file	.env	--env-file	apps/beszel/.env	-f	apps/beszel/docker-compose.yml	up	-d
+down-beszel|docker	compose	--env-file	.env	--env-file	apps/beszel/.env	-f	apps/beszel/docker-compose.yml	down
 up-infra-postgres|docker	compose	--env-file	.env	--env-file	apps/infra_postgres/.env	-f	apps/infra_postgres/docker-compose.yml	up	-d
+up-infra-mssql|docker	compose	--env-file	.env	--env-file	apps/infra_mssql/.env	-f	apps/infra_mssql/docker-compose.yml	up	-d
+down-infra-mssql|docker	compose	--env-file	.env	--env-file	apps/infra_mssql/.env	-f	apps/infra_mssql/docker-compose.yml	down
+up-infra-mongodb|docker	compose	--env-file	.env	--env-file	apps/infra_mongodb/.env	-f	apps/infra_mongodb/docker-compose.yml	up	-d
+up-coder|docker	compose	--env-file	.env	--env-file	apps/coder/.env	-f	apps/coder/docker-compose.yml	up	-d
+up-metabase|docker	compose	--env-file	.env	--env-file	apps/metabase/.env	-f	apps/metabase/docker-compose.yml	up	-d
+up-gitlab|docker	compose	--env-file	.env	--env-file	apps/gitlab/.env	-f	apps/gitlab/docker-compose.yml	up	-d
 EOF
 }
 
@@ -110,14 +124,18 @@ EOF
 # log format. Visual alignment is sacrificed for exact match validation.
 #
 # Examples explained:
-# - up-freqtrade-postgres: Two compose files + up + build flag
-# - down-freqtrade-postgres: Same files + down (no build)
-# - build-freqtrade: Same files + explicit build command with --no-cache
+# - up-freqtrade: Single compose file variant (baseline for comparison)
+# - down-freqtrade: Same baseline with down command
+# - up-freqtrade-postgres: Two compose files (base + postgres overlay) with --build flag
+# - down-freqtrade-postgres: Same multi-file structure with down (no build needed)
+# - build-freqtrade: Explicit build command with --no-cache for clean image rebuilds
 
 @test "multi-file compose targets build expected docker compose commands" {
   while IFS='|' read -r target expected_line; do
     run_and_assert_compose_line "$target" "$expected_line"
   done <<'EOF'
+up-freqtrade|docker	compose	--env-file	.env	--env-file	apps/freqtrade/.env	-f	apps/freqtrade/docker-compose.yml	up	-d
+down-freqtrade|docker	compose	--env-file	.env	--env-file	apps/freqtrade/.env	-f	apps/freqtrade/docker-compose.yml	down
 up-freqtrade-postgres|docker	compose	--env-file	.env	--env-file	apps/freqtrade/.env	-f	apps/freqtrade/docker-compose.yml	-f	apps/freqtrade/docker-compose.postgres.yml	up	-d	--build
 down-freqtrade-postgres|docker	compose	--env-file	.env	--env-file	apps/freqtrade/.env	-f	apps/freqtrade/docker-compose.yml	-f	apps/freqtrade/docker-compose.postgres.yml	down
 build-freqtrade|docker	compose	--env-file	.env	--env-file	apps/freqtrade/.env	-f	apps/freqtrade/docker-compose.yml	-f	apps/freqtrade/docker-compose.postgres.yml	build	--no-cache
