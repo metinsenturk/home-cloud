@@ -1,2 +1,7 @@
 .env
 !.env.example
+
+# Local custom group configuration (generated from examples)
+# Keep these untracked so each user can maintain personal groups.
+groups.mk
+groups.yaml

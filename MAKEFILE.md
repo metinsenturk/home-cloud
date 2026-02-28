@@ -220,6 +220,8 @@ Stops all services in reverse order (safe teardown).
 
 Groups let you launch related apps together. For example, create a "data-tools" group containing Jupyter, Metabase, and Datasette.
 
+Note: `groups.mk` and `groups.yaml` are intentionally git-ignored because they are local/user-specific configuration files.
+
 #### Initialize Group Configuration
 ```bash
 make init-groups
