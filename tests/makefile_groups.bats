@@ -82,6 +82,50 @@ load test_helper
   [[ "$output" == *"→ Starting blinko"* ]]
 }
 
+# Verifies down alias forwards to the generic down-group target.
+@test "down-favorites alias forwards to down-group-favorites" {
+  run make_in_tmp init-groups
+  [ "$status" -eq 0 ]
+
+  run make_in_tmp down-favorites
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"→ Stopping blinko"* ]]
+}
+
+# Verifies unknown group fails with a clear error in make backend.
+@test "up-group fails when group does not exist" {
+  run make_in_tmp init-groups
+  [ "$status" -eq 0 ]
+
+  run make_in_tmp up-group-does-not-exist
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"group 'does-not-exist' not found or empty"* ]]
+}
+
+# Verifies empty group definitions are rejected.
+@test "up-group fails when group is empty" {
+  cat > "$MAKEFILE_TEST_ROOT/groups.mk" <<'EOF'
+GROUPS := empty
+GROUP_empty :=
+EOF
+
+  run make_in_tmp up-group-empty
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"group 'empty' not found or empty"* ]]
+}
+
+# Verifies failure from an unknown app target propagates out of group execution.
+@test "up-group fails when group contains unknown app target" {
+  cat > "$MAKEFILE_TEST_ROOT/groups.mk" <<'EOF'
+GROUPS := broken
+GROUP_broken := app-does-not-exist
+EOF
+
+  run make_in_tmp up-group-broken
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"No rule to make target 'up-app-does-not-exist'"* ]]
+}
+
 # Verifies unknown backend values fail with an explicit error message.
 @test "invalid GROUPS_BACKEND returns error" {
   run make_in_tmp list-groups GROUPS_BACKEND=invalid

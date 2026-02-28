@@ -151,7 +151,7 @@ test-makefile:
 		echo "  Ubuntu/WSL: sudo apt-get install -y bats"; \
 		exit 1; \
 	fi
-	@bats tests/makefile_groups.bats
+	@bats tests/*.bats
 
 .PHONY: init-groups
 init-groups:

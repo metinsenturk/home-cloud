@@ -7,11 +7,16 @@
 #
 # Behavior:
 # - Accepts `docker network inspect`, `docker network create`, and `docker compose`.
-# - Always exits 0 so tests validate Makefile flow, not Docker runtime behavior.
+# - Supports env flags for failure simulation in tests:
+#   - MOCK_DOCKER_NETWORK_INSPECT_FAIL=1
+#   - MOCK_DOCKER_COMPOSE_CONFIG_FAIL=1
 set -e
 
 # Simulate successful network existence check.
 if [[ "$1" == "network" && "$2" == "inspect" ]]; then
+  if [[ "${MOCK_DOCKER_NETWORK_INSPECT_FAIL:-0}" == "1" ]]; then
+    exit 1
+  fi
   exit 0
 fi
 
@@ -22,6 +27,13 @@ fi
 
 # Simulate successful docker compose invocation.
 if [[ "$1" == "compose" ]]; then
+  if [[ "${MOCK_DOCKER_COMPOSE_CONFIG_FAIL:-0}" == "1" ]]; then
+    for arg in "$@"; do
+      if [[ "$arg" == "config" ]]; then
+        exit 1
+      fi
+    done
+  fi
   exit 0
 fi
 

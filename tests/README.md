@@ -38,7 +38,7 @@ bats --version
 ## Run tests
 
 ```bash
-bats tests/makefile_groups.bats
+bats tests/*.bats
 ```
 
 or
@@ -51,6 +51,6 @@ make test-makefile
 
 - `docker` and `yq` are mocked under `tests/helpers/mock-bin`.
 - Tests run in a temporary workspace to avoid touching real files.
-- Scope focuses on group commands (`list-groups`, `up-group-*`, `down-group-*`, `init-groups`, `clean-groups`, aliases).
+- Scope includes group commands and core utility commands (`create-network`, `check-validity`).
 - On Windows/WSL repos, line endings can break mock executables (`bash\r`).
 	The test helper normalizes line endings automatically during setup.
