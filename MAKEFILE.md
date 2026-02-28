@@ -35,8 +35,9 @@ home-cloud/
 ├── Makefile           ← You are here (command center)
 ├── .env              ← Global environment variables
 ├── apps/             ← Individual applications
-│   ├── traefik/      ← Reverse proxy (base service)
-│   ├── dozzle/       ← Log viewer (base service)
+│   ├── traefik/      ← Reverse proxy (core infrastructure)
+│   ├── dozzle/       ← Log viewer (core infrastructure)
+│   ├── wud/          ← Update detector (core infrastructure)
 │   ├── blinko/       ← Example app
 │   └── ...
 ├── groups.mk         ← Optional: Custom app groups (Make format)

@@ -4,7 +4,7 @@ You are an expert DevOps engineer assisting with a modular self-hosted infrastru
 The project uses a "Base + App" folder strategy to allow launching subsets of services.
 
 ## Architecture Principles
-- **Reverse Proxy:** Traefik v3 (lives in `/base`).
+- **Reverse Proxy:** Traefik v3 (lives in `/apps/traefik`).
 - **Networking:** All public-facing containers must connect to the external bridge network `home_network`.
 - **Modularity:** Each application must live in its own subdirectory under `/apps`.
 - **Routing:** Use Subdomains (e.g., `appname.${DOMAIN}`) via Traefik labels, NOT subpaths.
