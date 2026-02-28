@@ -10,7 +10,8 @@
   - [🔧 Setup & Validation](#-setup--validation)
   - [🚀 Launching Services](#-launching-services)
   - [⛔ Stopping Services](#-stopping-services)
-  - [📦 Custom Groups](#-custom-groups)
+  - [� Logging & Management](#-logging--management)
+  - [�📦 Custom Groups](#-custom-groups)
   - [🧪 Testing](#-testing)
 - [Working with Groups](#working-with-groups)
 - [Tips & Best Practices](#tips--best-practices)
@@ -232,7 +233,54 @@ Stops all services in reverse order (safe teardown).
 
 ---
 
-### 📦 Custom Groups
+### � Logging & Management
+
+Real-time monitoring and container inspection commands.
+
+#### View Live Logs for an App
+```bash
+make logs-<appname>
+```
+
+**Examples:**
+```bash
+make logs-blinko        # View Blinko logs
+make logs-metabase      # View Metabase logs
+make logs-jupyter       # View Jupyter logs
+make logs-dozzle        # View Dozzle logs
+```
+
+**What it does:**
+- Shows the last 50 lines of logs
+- Follows in real-time (like `tail -f`)
+- Includes timestamps for context
+- Works with multi-container apps (shows all containers' logs together)
+- Press `Ctrl+C` to stop following
+
+**How it handles environment variables:**
+- Always loads root `.env` (global configuration)
+- Automatically loads `apps/<appname>/.env` if it exists (app-specific config)
+- If the app `.env` file doesn't exist, only uses root `.env`
+
+This means it works for all apps whether they have their own `.env` file or not (like the core services: traefik, dozzle, wud).
+
+**Pro tip**: Use Dozzle for a web-based log viewer (available at `https://dozzle.yourdomain.com`)
+
+#### Show Container Status
+```bash
+make ps
+```
+
+Displays status of all running Docker containers across the entire infrastructure.
+
+Useful for:
+- Checking which containers are running
+- Verifying container health
+- Debugging failed starts
+
+---
+
+### �📦 Custom Groups
 
 Groups let you launch related apps together. For example, create a "data-tools" group containing Jupyter, Metabase, and Datasette.
 

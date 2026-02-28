@@ -61,6 +61,8 @@
 #   make check-tools                 # Checks for required and optional dependencies
 #   make up-base                     # Launches base services (Traefik, Dozzle, WUD)
 #   make up-all                      # Launches all services
+#   make logs-<appname>              # View live logs for an app (e.g., make logs-dozzle)
+#   make ps                          # Show status of all running containers
 #   make test-makefile               # Runs unit-like tests for Makefile commands
 #   make test-makefile-integration   # Runs integration tests (quick tier, ~30-60s)
 #   make test-makefile-integration-quick  # Explicit quick tier: network, compose validation
@@ -958,10 +960,30 @@ build-freqtrade:
 		-f apps/freqtrade/docker-compose.yml \
 		-f apps/freqtrade/docker-compose.postgres.yml build --no-cache
 
+# =============================================================
+# Logging & Management
+# =============================================================
+
+.PHONY: logs-%
+logs-%:
+	@echo "📋 Showing logs for $* (last 50 lines, following)..."
+	@echo "   Press Ctrl+C to stop"
+	@echo ""
+	@if [ -f apps/$*/.env ]; then \
+		docker compose --env-file .env --env-file apps/$*/.env -f apps/$*/docker-compose.yml logs -f --tail=50 --timestamps; \
+	else \
+		docker compose --env-file .env -f apps/$*/docker-compose.yml logs -f --tail=50 --timestamps; \
+	fi
+
+.PHONY: ps
+ps:
+	@echo "📊 Running containers:"
+	@echo ""
+	docker compose ps
 
 # =============================================================
 # Aggregate Commands
-# =============================================================
+# ============================================================= 
 
 .PHONY: up-all
 up-all: up-traefik up-dozzle up-wud up-infra-postgres up-infra-mssql up-infra-mongodb up-infisical up-beszel up-blinko up-coder up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-metasearch up-datasette up-mailpit up-portracker up-gitlab up-pgadmin up-pgbackweb up-redash up-vscode up-openclaw up-uptime-kuma up-resume up-yopass up-freqtrade

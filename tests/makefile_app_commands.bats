@@ -141,3 +141,34 @@ down-freqtrade-postgres|docker	compose	--env-file	.env	--env-file	apps/freqtrade
 build-freqtrade|docker	compose	--env-file	.env	--env-file	apps/freqtrade/.env	-f	apps/freqtrade/docker-compose.yml	-f	apps/freqtrade/docker-compose.postgres.yml	build	--no-cache
 EOF
 }
+
+# ==============================================================================
+# Logging & Management Commands
+# ==============================================================================
+# These are pattern-rule commands that work for any app.
+#
+# logs-<appname>: View live logs from an app's containers
+# - Uses pattern rule logs-% to match any app name
+# - Conditionally loads app-specific .env only if it exists
+# - Shows last 50 lines with timestamps and follows in real-time
+# - Works with multi-container apps (shows all containers' logs)
+#
+# ps: Show status of all running containers
+# - Simple global command that shows status across all services
+#
+# Note: Core services (dozzle, traefik, wud) don't have .env files,
+# so logs-% uses different commands based on file existence.
+#
+# Table format: target|expected_docker_argv
+
+@test "logging and management targets build expected docker compose commands" {
+  while IFS='|' read -r target expected_line; do
+    run_and_assert_compose_line "$target" "$expected_line"
+  done <<'EOF'
+logs-blinko|docker	compose	--env-file	.env	-f	apps/blinko/docker-compose.yml	logs	-f	--tail=50	--timestamps
+logs-metabase|docker	compose	--env-file	.env	-f	apps/metabase/docker-compose.yml	logs	-f	--tail=50	--timestamps
+logs-infra_postgres|docker	compose	--env-file	.env	-f	apps/infra_postgres/docker-compose.yml	logs	-f	--tail=50	--timestamps
+logs-dozzle|docker	compose	--env-file	.env	-f	apps/dozzle/docker-compose.yml	logs	-f	--tail=50	--timestamps
+ps|docker	compose	ps
+EOF
+}
