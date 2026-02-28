@@ -6,6 +6,11 @@
 # 3) Run: make list-groups
 # 4) Run: make up-group-favorites
 # 5) Run: make down-group-favorites
+#
+# Optional: Add aliases in Makefile for frequently-used groups
+#   .PHONY: up-favorites
+#   up-favorites:
+#       @$(MAKE) up-group-favorites
 
 # Declare all group names here (space-separated)
 GROUPS := favorites finance school

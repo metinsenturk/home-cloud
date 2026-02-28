@@ -8,6 +8,8 @@
 #   make list-groups                 # Lists available custom app groups
 #   make up-group-favorites          # Launches apps from a custom group
 #   make down-group-favorites        # Stops apps from a custom group
+#   make up-favorites                # Shortcut alias for up-group-favorites
+#   make down-favorites              # Shortcut alias for down-group-favorites
 #
 # Custom group backends:
 #   GROUPS_BACKEND=make (default, no dependency)
@@ -191,6 +193,20 @@ down-group-%:
 			exit 1; \
 			;; \
 	esac
+
+# =============================================================
+# Group Aliases (Optional Shortcuts)
+# =============================================================
+# You can add convenient aliases for frequently-used groups here.
+# These forward to the generic up-group-* / down-group-* targets.
+
+.PHONY: up-favorites
+up-favorites:
+	@$(MAKE) up-group-favorites
+
+.PHONY: down-favorites
+down-favorites:
+	@$(MAKE) down-group-favorites
 
 # =============================================================
 # Base Services (Traefik, Dozzle, WUD)

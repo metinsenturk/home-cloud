@@ -7,6 +7,11 @@
 #    make list-groups GROUPS_BACKEND=yaml
 #    make up-group-favorites GROUPS_BACKEND=yaml
 #    make down-group-favorites GROUPS_BACKEND=yaml
+#
+# Optional: Add aliases in Makefile for frequently-used groups
+#   .PHONY: up-favorites
+#   up-favorites:
+#       @$(MAKE) up-group-favorites
 
 groups:
   favorites:
