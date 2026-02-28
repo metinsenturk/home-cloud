@@ -31,6 +31,11 @@ setup() {
   export MAKE_BIN
   MAKE_BIN="$(command -v make)"
 
+  # Initialize docker mock invocation log for command-construction assertions.
+  export MOCK_DOCKER_LOG_FILE
+  MOCK_DOCKER_LOG_FILE="$MAKEFILE_TEST_ROOT/mock_docker.log"
+  : > "$MOCK_DOCKER_LOG_FILE"
+
   # Prepend mocks to PATH while preserving original PATH for specific tests.
   export ORIGINAL_PATH="$PATH"
   export PATH="$BATS_TEST_DIRNAME/helpers/mock-bin:$ORIGINAL_PATH"
@@ -47,4 +52,14 @@ make_in_tmp() {
     cd "$MAKEFILE_TEST_ROOT" || exit 1
     "$MAKE_BIN" "$@"
   )
+}
+
+reset_docker_log() {
+  # Clear captured docker invocations between command assertions.
+  : > "$MOCK_DOCKER_LOG_FILE"
+}
+
+docker_log_contains() {
+  # Returns success when a fixed string exists in docker invocation log.
+  grep -F -- "$1" "$MOCK_DOCKER_LOG_FILE" > /dev/null
 }

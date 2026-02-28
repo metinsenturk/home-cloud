@@ -10,7 +10,20 @@
 # - Supports env flags for failure simulation in tests:
 #   - MOCK_DOCKER_NETWORK_INSPECT_FAIL=1
 #   - MOCK_DOCKER_COMPOSE_CONFIG_FAIL=1
+# - Supports command logging for assertions:
+#   - MOCK_DOCKER_LOG_FILE=/path/to/log
 set -e
+
+# Optionally log every docker invocation for test assertions.
+if [[ -n "${MOCK_DOCKER_LOG_FILE:-}" ]]; then
+  {
+    printf 'docker'
+    for arg in "$@"; do
+      printf '\t%s' "$arg"
+    done
+    printf '\n'
+  } >> "$MOCK_DOCKER_LOG_FILE"
+fi
 
 # Simulate successful network existence check.
 if [[ "$1" == "network" && "$2" == "inspect" ]]; then

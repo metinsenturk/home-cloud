@@ -52,5 +52,6 @@ make test-makefile
 - `docker` and `yq` are mocked under `tests/helpers/mock-bin`.
 - Tests run in a temporary workspace to avoid touching real files.
 - Scope includes group commands and core utility commands (`create-network`, `check-validity`).
+- Scope also includes representative per-app command construction assertions.
 - On Windows/WSL repos, line endings can break mock executables (`bash\r`).
 	The test helper normalizes line endings automatically during setup.
