@@ -1,0 +1,189 @@
+services:
+  tooljet:
+    image:  tooljet/tooljet-ce:ce-lts-latest
+    container_name: tooljet
+    restart: unless-stopped
+    networks:
+      - home_network
+    # volumes:
+    #   - home_tooljet_data:/var/lib/postgresql/13/main
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tooljet.rule=Host(`tooljet.${DOMAIN}`)"
+      - "traefik.http.services.tooljet.loadbalancer.server.port=3000"
+      - "traefik.docker.network=home_network"
+    environment:
+      - TOOLJET_HOST=http://tooljet.${DOMAIN}
+      - LOCKBOX_MASTER_KEY=${TOOLJET_LOCKBOX_KEY}
+      - SECRET_KEY_BASE=${TOOLJET_SECRET_KEY}
+      - PGRST_JWT_SECRET=${TOOLJET_PGRST_JWT_SECRET}
+      - PG_HOST=${TOOLJET_PG_HOST}
+      - PG_DB=${TOOLJET_PG_DB}
+      - PG_USER=${TOOLJET_PG_USER}
+      - PG_PASS=${TOOLJET_PG_PASS}
+      - PG_PORT=5432
+      - REDIS_HOST=${TOOLJET_REDIS_HOST}
+      - REDIS_PORT=${TOOLJET_REDIS_PORT}
+      - TOOLJET_DB=${TOOLJET_DB_NAME}
+      - TOOLJET_DB_HOST=${TOOLJET_PG_HOST}
+      - TOOLJET_DB_USER=${TOOLJET_PG_USER}
+      - TOOLJET_DB_PASS=${TOOLJET_PG_PASS}
+      - TOOLJET_DB_PORT=5432
+      - TZ=${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    depends_on:
+      tooljet-db:
+        condition: service_healthy
+      tooljet-redis:
+        condition: service_healthy
+    command: npm run start:prod
+    env_file:
+      - .env
+
+  tooljet-worker:
+    image: tooljet/tooljet-ce:ce-lts-latest
+    container_name: tooljet_worker
+    restart: unless-stopped
+    networks:
+      - home_network
+    environment:
+      - WORKER=true
+      - TOOLJET_WORKFLOW_CONCURRENCY=${TOOLJET_WORKFLOW_CONCURRENCY}
+      - LOCKBOX_MASTER_KEY=${TOOLJET_LOCKBOX_KEY}
+      - SECRET_KEY_BASE=${TOOLJET_SECRET_KEY}
+      - PGRST_JWT_SECRET=${TOOLJET_PGRST_JWT_SECRET}
+      - PG_HOST=${TOOLJET_PG_HOST}
+      - PG_DB=${TOOLJET_PG_DB}
+      - PG_USER=${TOOLJET_PG_USER}
+      - PG_PASS=${TOOLJET_PG_PASS}
+      - PG_PORT=5432
+      - REDIS_HOST=${TOOLJET_REDIS_HOST}
+      - REDIS_PORT=${TOOLJET_REDIS_PORT}
+      - TOOLJET_DB=${TOOLJET_DB_NAME}
+      - TOOLJET_DB_HOST=${TOOLJET_PG_HOST}
+      - TOOLJET_DB_USER=${TOOLJET_PG_USER}
+      - TOOLJET_DB_PASS=${TOOLJET_PG_PASS}
+      - TOOLJET_DB_PORT=5432
+      - TZ=${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    # healthcheck:
+    #   test: ["CMD-SHELL", "ps aux | grep -q '[n]ode'"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 5
+    #   start_period: 60s
+    depends_on:
+      tooljet-db:
+        condition: service_healthy
+      tooljet-redis:
+        condition: service_healthy
+    command: npm run start:prod
+    env_file:
+      - .env
+
+  tooljet-db:
+    image: postgres:16-alpine
+    container_name: tooljet_db
+    restart: unless-stopped
+    networks:
+      - home_network
+    volumes:
+      - home_tooljet_postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${TOOLJET_PG_USER}
+      - POSTGRES_PASSWORD=${TOOLJET_PG_PASS}
+      - POSTGRES_DB=${TOOLJET_PG_DB}
+      - TZ=${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    env_file:
+      - .env
+
+  tooljet-redis:
+    image: redis:7-alpine
+    container_name: tooljet_redis
+    restart: unless-stopped
+    networks:
+      - home_network
+    volumes:
+      - home_tooljet_redis_data:/data
+    environment:
+      - TZ=${TZ}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    env_file:
+      - .env
+
+  postgrest:
+    image: postgrest/postgrest:latest
+    container_name: tooljet_postgrest
+    restart: unless-stopped
+    networks:
+      - home_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tooljet-api.rule=Host(`tooljet-api.${DOMAIN}`)"
+      - "traefik.http.services.tooljet-api.loadbalancer.server.port=3000"
+      - "traefik.docker.network=home_network"
+    environment:
+      # Connection string: postgres://user:password@host:port/database
+      - PGRST_DB_URI=postgres://${TOOLJET_PG_USER}:${TOOLJET_PG_PASS}@${TOOLJET_PG_HOST}:5432/${TOOLJET_PG_DB}
+      - PGRST_DB_SCHEMAS=public
+      - PGRST_DB_ANON_ROLE=${TOOLJET_PG_USER}
+      - PGRST_JWT_SECRET=${TOOLJET_PGRST_JWT_SECRET}
+      - PGRST_LOG_LEVEL=info
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    # healthcheck:
+    #   test: ["CMD", "postgrest", "--ready"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+    #   start_period: 10s
+    depends_on:
+      tooljet-db:
+        condition: service_healthy
+    env_file:
+      - .env
+
+networks:
+  home_network:
+    external: true
+
+volumes:
+  # home_tooljet_data:
+  #   name: home_tooljet_data
+  home_tooljet_postgres_data:
+    name: home_tooljet_postgres_data
+  home_tooljet_redis_data:
+    name: home_tooljet_redis_data
