@@ -1,0 +1,37 @@
+services:
+  dockhand:
+    image: fnsys/dockhand:latest
+    container_name: dockhand
+    restart: unless-stopped
+    networks:
+      - home_network
+    volumes:
+      # Docker socket access is required for container management
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Persistent storage for SQLite database and app data
+      - home_dockhand_data:/app/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dockhand.rule=Host(`dockhand.${DOMAIN}`)"
+      - "traefik.http.services.dockhand.loadbalancer.server.port=3000"
+      - "traefik.docker.network=home_network"
+    environment:
+      - TZ=${TZ}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  home_network:
+    external: true
+
+volumes:
+  home_dockhand_data:
+    name: home_dockhand_data
