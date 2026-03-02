@@ -71,7 +71,7 @@ services:
     # getent group docker
     # Returns something like "docker:x:1001:username", where 1001 is the group ID to use below.
     group_add:
-      - "1001"
+      - ${DOCKER_GROUP_ID}
     # `coder` service requires an `extra_hosts` mapping to resolve its own external domain.
     # This mapping tells the Coder container: "If you need to reach `coder.localhost`, go out 
     # to the Windows Host." Traefik (listening on the host) then receives the request and

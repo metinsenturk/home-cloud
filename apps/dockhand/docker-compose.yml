@@ -28,7 +28,7 @@ services:
       retries: 3
       start_period: 30s
     group_add:
-      - "1001"
+      - ${DOCKER_GROUP_ID}
 
 networks:
   home_network:
