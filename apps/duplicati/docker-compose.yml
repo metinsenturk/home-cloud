@@ -1,0 +1,43 @@
+services:
+  duplicati:
+    image: duplicati/duplicati:latest
+    container_name: duplicati
+    restart: unless-stopped
+    # home_network is required so Traefik can route duplicati.${DOMAIN} to this container.
+    networks:
+      - home_network
+    volumes:
+      # Persist /data so Duplicati config, jobs, and local database survive container recreation.
+      - home_duplicati_data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.duplicati.rule=Host(`duplicati.${DOMAIN}`)"
+      - "traefik.http.services.duplicati.loadbalancer.server.port=8200"
+      - "traefik.docker.network=home_network"
+    environment:
+      - DUPLICATI__WEBSERVICE_PASSWORD=${DUPLICATI_PASSWORD}
+      - DUPLICATI__WEBSERVICE_ALLOWED_HOSTNAMES=${DUPLICATI_ALLOWED_HOSTNAMES}
+      # Docker image guidance recommends explicit DB encryption mode for portable containers.
+      - DUPLICATI__DISABLE_DB_ENCRYPTION=true
+      - TZ=${TZ}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+    healthcheck:
+      # TCP-level probe avoids assuming curl/wget availability inside the image.
+      test: ["CMD", "/opt/duplicati/duplicati-server-util", "health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    env_file:
+      - .env
+
+networks:
+  home_network:
+    external: true
+
+volumes:
+  home_duplicati_data:
+    name: home_duplicati_data
