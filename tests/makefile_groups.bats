@@ -172,8 +172,7 @@ EOF
   run make_in_tmp init-groups GROUPS_BACKEND=yaml
   [ "$status" -eq 0 ]
 
-  PATH="$ORIGINAL_PATH"
-  run make_in_tmp list-groups GROUPS_BACKEND=yaml
+  PATH="/nonexistent" run make_in_tmp list-groups GROUPS_BACKEND=yaml
 
   [ "$status" -ne 0 ]
   [[ "$output" == *"yq is required for GROUPS_BACKEND=yaml"* ]]
