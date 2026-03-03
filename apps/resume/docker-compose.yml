@@ -1,6 +1,6 @@
 services:
   resume-db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     container_name: resume_db
     restart: unless-stopped
     networks:

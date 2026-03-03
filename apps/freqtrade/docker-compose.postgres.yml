@@ -10,7 +10,7 @@
 services:
   # PostgreSQL Database Service
   freqtrade-postgres:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     container_name: freqtrade_postgres
     restart: unless-stopped
     networks:

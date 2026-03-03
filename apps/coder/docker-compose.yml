@@ -1,6 +1,6 @@
 services:
   coder-db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     container_name: coder_db
     restart: unless-stopped
     # PostgreSQL database for Coder metadata and state.

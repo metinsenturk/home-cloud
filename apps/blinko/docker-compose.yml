@@ -1,6 +1,6 @@
 services:
   blinko-db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     container_name: blinko_postgres
     restart: unless-stopped
     networks:
