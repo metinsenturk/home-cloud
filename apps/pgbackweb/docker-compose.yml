@@ -1,6 +1,6 @@
 services:
   pgbackweb-db:
-    image: postgres:alpine
+    image: postgres:16-alpine
     container_name: pgbackweb_db
     restart: unless-stopped
     # PostgreSQL database for pgBackweb metadata storage.

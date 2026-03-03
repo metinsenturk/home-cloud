@@ -1,6 +1,6 @@
 services:
   mage-db:
-    image: postgres:alpine
+    image: postgres:16-alpine
     container_name: mage_db
     restart: unless-stopped
     networks:

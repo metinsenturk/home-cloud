@@ -9,7 +9,7 @@ x-redash-healthcheck: &redash-healthcheck
 
 services:
   postgres:
-    image: postgres:latest
+    image: postgres:16-alpine
     container_name: redash_postgres
     restart: unless-stopped
     networks:
