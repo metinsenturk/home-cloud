@@ -14,6 +14,14 @@ Homebridge is a lightweight NodeJS server that emulates the iOS HomeKit API, all
 - **HomeKit Bridge:** Port 51826 (exposed to host for iOS device connectivity)
 - **Default Login:** `admin` / `admin` (change immediately on first login)
 
+## HomeKit Discovery
+
+**Platform-Specific Setup Required**
+
+See [DISCOVERY.md](DISCOVERY.md) for detailed platform guidance:
+- **Linux/macOS**: Automatic discovery supported with port mapping
+- **Windows**: Manual pairing required due to mDNS port conflicts
+
 ## Starting this App
 
 ### From the app folder:
