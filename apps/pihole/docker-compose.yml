@@ -1,0 +1,47 @@
+services:
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    restart: unless-stopped
+    networks:
+      - home_network
+    ports:
+      # Expose DNS on the host so LAN clients can use Pi-hole as their resolver.
+      - "${PIHOLE_DNS_PORT}:53/tcp"
+      - "${PIHOLE_DNS_PORT}:53/udp"
+      # Optional DHCP exposure (disabled by default in this stack).
+      # - "${PIHOLE_DHCP_PORT}:67/udp"
+    volumes:
+      # Persist Pi-hole state across container recreation and upgrades.
+      - home_pihole_data:/etc/pihole
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pihole.rule=Host(`pihole.${PIHOLE_DOMAIN}`)"
+      - "traefik.http.services.pihole.loadbalancer.server.port=80"
+      - "traefik.docker.network=home_network"
+    environment:
+      - TZ=${PIHOLE_TZ}
+      - FTLCONF_webserver_api_password=${PIHOLE_WEBPASSWORD}
+      - FTLCONF_dns_listeningMode=${PIHOLE_DNS_LISTENING_MODE}
+      - FTLCONF_dns_upstreams=${PIHOLE_DNS_UPSTREAMS}
+      # Optional DHCP toggle. Keep disabled unless your network design supports DHCP relay/host mode.
+      # - FTLCONF_dhcp_active=${PIHOLE_ENABLE_DHCP}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    healthcheck:
+      # Native CLI healthcheck avoids curl/wget dependency assumptions.
+      test: ["CMD-SHELL", "pihole status || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  home_network:
+    external: true
+
+volumes:
+  home_pihole_data:
+    name: home_pihole_data

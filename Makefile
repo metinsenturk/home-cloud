@@ -1034,6 +1034,20 @@ down-homeassistant:
 		--env-file apps/homeassistant/.env \
 		-f apps/homeassistant/docker-compose.yml down
 
+.PHONY: up-pihole
+up-pihole: create-network
+	docker compose \
+		--env-file .env \
+		--env-file apps/pihole/.env \
+		-f apps/pihole/docker-compose.yml up -d
+
+.PHONY: down-pihole
+down-pihole:
+	docker compose \
+		--env-file .env \
+		--env-file apps/pihole/.env \
+		-f apps/pihole/docker-compose.yml down
+
 .PHONY: up-freqtrade
 up-freqtrade: create-network
 	docker compose \
@@ -1098,9 +1112,9 @@ ps:
 # ============================================================= 
 
 .PHONY: up-all
-up-all: up-traefik up-dozzle up-wud up-infra-postgres up-infra-mssql up-infra-mongodb up-infisical up-dockhand up-beszel up-blinko up-coder up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-metasearch up-datasette up-duplicati up-mailpit up-portracker up-gitlab up-pgadmin up-pgbackweb up-redash up-superset up-vscode up-openclaw up-uptime-kuma up-resume up-yopass up-tooljet up-freqtrade
+up-all: up-traefik up-dozzle up-wud up-infra-postgres up-infra-mssql up-infra-mongodb up-infisical up-dockhand up-beszel up-blinko up-coder up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-metasearch up-datasette up-duplicati up-mailpit up-portracker up-gitlab up-pgadmin up-pgbackweb up-redash up-superset up-vscode up-openclaw up-uptime-kuma up-resume up-yopass up-tooljet up-pihole up-freqtrade
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-freqtrade down-tooljet down-yopass down-resume down-uptime-kuma down-openclaw down-vscode down-superset down-redash down-pgbackweb down-pgadmin down-gitlab down-portracker down-mailpit down-duplicati down-datasette down-metasearch down-memos down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-coder down-blinko down-beszel down-dockhand down-infisical down-infra-mongodb down-infra-mssql down-infra-postgres down-wud down-dozzle down-traefik
+down-all: down-freqtrade down-pihole down-tooljet down-yopass down-resume down-uptime-kuma down-openclaw down-vscode down-superset down-redash down-pgbackweb down-pgadmin down-gitlab down-portracker down-mailpit down-duplicati down-datasette down-metasearch down-memos down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-coder down-blinko down-beszel down-dockhand down-infisical down-infra-mongodb down-infra-mssql down-infra-postgres down-wud down-dozzle down-traefik
 	@echo "All services stopped."
