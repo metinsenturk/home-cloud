@@ -96,10 +96,10 @@ up-blinko|docker	compose	--env-file	.env	--env-file	apps/blinko/.env	-f	apps/bli
 down-blinko|docker	compose	--env-file	.env	--env-file	apps/blinko/.env	-f	apps/blinko/docker-compose.yml	down
 up-beszel|docker	compose	--env-file	.env	--env-file	apps/beszel/.env	-f	apps/beszel/docker-compose.yml	up	-d
 down-beszel|docker	compose	--env-file	.env	--env-file	apps/beszel/.env	-f	apps/beszel/docker-compose.yml	down
-up-infra-postgres|docker	compose	--env-file	.env	--env-file	apps/infra_postgres/.env	-f	apps/infra_postgres/docker-compose.yml	up	-d
-up-infra-mssql|docker	compose	--env-file	.env	--env-file	apps/infra_mssql/.env	-f	apps/infra_mssql/docker-compose.yml	up	-d
-down-infra-mssql|docker	compose	--env-file	.env	--env-file	apps/infra_mssql/.env	-f	apps/infra_mssql/docker-compose.yml	down
-up-infra-mongodb|docker	compose	--env-file	.env	--env-file	apps/infra_mongodb/.env	-f	apps/infra_mongodb/docker-compose.yml	up	-d
+up-postgres|docker	compose	--env-file	.env	--env-file	apps/postgres/.env	-f	apps/postgres/docker-compose.yml	up	-d
+up-mssql|docker	compose	--env-file	.env	--env-file	apps/mssql/.env	-f	apps/mssql/docker-compose.yml	up	-d
+down-mssql|docker	compose	--env-file	.env	--env-file	apps/mssql/.env	-f	apps/mssql/docker-compose.yml	down
+up-mongodb|docker	compose	--env-file	.env	--env-file	apps/mongodb/.env	-f	apps/mongodb/docker-compose.yml	up	-d
 up-coder|docker	compose	--env-file	.env	--env-file	apps/coder/.env	-f	apps/coder/docker-compose.yml	up	-d
 up-metabase|docker	compose	--env-file	.env	--env-file	apps/metabase/.env	-f	apps/metabase/docker-compose.yml	up	-d
 up-gitlab|docker	compose	--env-file	.env	--env-file	apps/gitlab/.env	-f	apps/gitlab/docker-compose.yml	up	-d
@@ -167,7 +167,7 @@ EOF
   done <<'EOF'
 logs-blinko|docker	compose	--env-file	.env	-f	apps/blinko/docker-compose.yml	logs	-f	--tail=50	--timestamps
 logs-metabase|docker	compose	--env-file	.env	-f	apps/metabase/docker-compose.yml	logs	-f	--tail=50	--timestamps
-logs-infra_postgres|docker	compose	--env-file	.env	-f	apps/infra_postgres/docker-compose.yml	logs	-f	--tail=50	--timestamps
+logs-postgres|docker	compose	--env-file	.env	-f	apps/postgres/docker-compose.yml	logs	-f	--tail=50	--timestamps
 logs-dozzle|docker	compose	--env-file	.env	-f	apps/dozzle/docker-compose.yml	logs	-f	--tail=50	--timestamps
 ps|docker	compose	ps
 EOF

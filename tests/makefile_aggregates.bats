@@ -89,7 +89,7 @@ load test_helper
   # Verify a sample of services across different categories
   docker_log_contains "apps/traefik/docker-compose.yml"   # base
   docker_log_contains "apps/blinko/docker-compose.yml"    # app
-  docker_log_contains "apps/infra_postgres/docker-compose.yml"  # infra
+  docker_log_contains "apps/postgres/docker-compose.yml"  # infra
   
   # Verify completion message
   [[ "$output" == *"All services launched."* ]]
@@ -104,7 +104,7 @@ load test_helper
   # Verify a sample of services are stopped
   docker_log_contains "apps/traefik/docker-compose.yml"
   docker_log_contains "apps/blinko/docker-compose.yml"
-  docker_log_contains "apps/infra_postgres/docker-compose.yml"
+  docker_log_contains "apps/postgres/docker-compose.yml"
   
   # Verify all use 'down' command
   grep -q "down" "$MOCK_DOCKER_LOG_FILE"

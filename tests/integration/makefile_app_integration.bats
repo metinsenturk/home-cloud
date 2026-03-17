@@ -81,13 +81,13 @@ teardown() {
 # Infrastructure services (databases, caches) often have no app .env or different
 # naming conventions. They have database-specific healthchecks.
 
-@test "infra-postgres (infrastructure) lifecycle: up → wait healthy → down → verify removed" {
+@test "postgres (infrastructure) lifecycle: up → wait healthy → down → verify removed" {
   [ "${RUN_INTEGRATION_TIER}" = "full" ] || skip "Slow app lifecycle test (use RUN_INTEGRATION_TIER=full)"
-  export INTEGRATION_CURRENT_APP="infra-postgres"
+  export INTEGRATION_CURRENT_APP="postgres"
   require_containers_absent_or_skip infra_postgres
 
   # Start infra service
-  run run_make_repo up-infra-postgres
+  run run_make_repo up-postgres
   [ "$status" -eq 0 ]
   INTEGRATION_APP_STARTED=1
 
@@ -106,7 +106,7 @@ teardown() {
   [[ "$output" == *"infra_postgres"* ]]
 
   # Stop infra service
-  run run_make_repo down-infra-postgres
+  run run_make_repo down-postgres
   [ "$status" -eq 0 ]
   INTEGRATION_APP_STARTED=0
 

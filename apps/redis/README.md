@@ -18,13 +18,13 @@ Redis is an open-source, in-memory data structure store used as a database, cach
 
 ### From the app folder:
 ```bash
-cd apps/infra_redis
+cd apps/redis
 docker compose --env-file ../../.env --env-file .env -f docker-compose.yml up -d
 ```
 
 ### From the root folder:
 ```bash
-make up-infra-redis
+make up-redis
 ```
 
 ## Configuration

@@ -25,13 +25,13 @@ Password: <as defined in .env>
 
 ### From the app folder:
 ```bash
-cd apps/infra_mssql
+cd apps/mssql
 docker compose --env-file ../../.env --env-file .env -f docker-compose.yml up -d
 ```
 
 ### From the root folder:
 ```bash
-make up-infra-mssql
+make up-mssql
 ```
 
 ## Configuration

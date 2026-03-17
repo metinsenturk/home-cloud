@@ -193,7 +193,7 @@ make up-<appname>
 make up-blinko          # Note-taking
 make up-metabase        # Analytics
 make up-jupyter         # Notebooks
-make up-infra-postgres  # PostgreSQL database
+make up-postgres        # PostgreSQL database
 make up-glance          # Dashboard
 make up-memos           # Memo app
 ```

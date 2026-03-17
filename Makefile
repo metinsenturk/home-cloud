@@ -726,61 +726,61 @@ down-pgbackweb:
 		--env-file apps/pgbackweb/.env \
 		-f apps/pgbackweb/docker-compose.yml down
 
-.PHONY: up-infra-postgres
-up-infra-postgres: create-network
+.PHONY: up-postgres
+up-postgres: create-network
 	docker compose \
 		--env-file .env \
-		--env-file apps/infra_postgres/.env \
-		-f apps/infra_postgres/docker-compose.yml up -d
+		--env-file apps/postgres/.env \
+		-f apps/postgres/docker-compose.yml up -d
 
-.PHONY: down-infra-postgres
-down-infra-postgres:
+.PHONY: down-postgres
+down-postgres:
 	docker compose \
 		--env-file .env \
-		--env-file apps/infra_postgres/.env \
-		-f apps/infra_postgres/docker-compose.yml down
+		--env-file apps/postgres/.env \
+		-f apps/postgres/docker-compose.yml down
 
-.PHONY: up-infra-mssql
-up-infra-mssql: create-network
+.PHONY: up-mssql
+up-mssql: create-network
 	docker compose \
 		--env-file .env \
-		--env-file apps/infra_mssql/.env \
-		-f apps/infra_mssql/docker-compose.yml up -d
+		--env-file apps/mssql/.env \
+		-f apps/mssql/docker-compose.yml up -d
 
-.PHONY: down-infra-mssql
-down-infra-mssql:
+.PHONY: down-mssql
+down-mssql:
 	docker compose \
 		--env-file .env \
-		--env-file apps/infra_mssql/.env \
-		-f apps/infra_mssql/docker-compose.yml down
+		--env-file apps/mssql/.env \
+		-f apps/mssql/docker-compose.yml down
 
-.PHONY: up-infra-mongodb
-up-infra-mongodb: create-network
+.PHONY: up-mongodb
+up-mongodb: create-network
 	docker compose \
 		--env-file .env \
-		--env-file apps/infra_mongodb/.env \
-		-f apps/infra_mongodb/docker-compose.yml up -d
+		--env-file apps/mongodb/.env \
+		-f apps/mongodb/docker-compose.yml up -d
 
-.PHONY: down-infra-mongodb
-down-infra-mongodb:
+.PHONY: down-mongodb
+down-mongodb:
 	docker compose \
 		--env-file .env \
-		--env-file apps/infra_mongodb/.env \
-		-f apps/infra_mongodb/docker-compose.yml down
+		--env-file apps/mongodb/.env \
+		-f apps/mongodb/docker-compose.yml down
 
-.PHONY: up-infra-redis
-up-infra-redis: create-network
+.PHONY: up-redis
+up-redis: create-network
 	docker compose \
 		--env-file .env \
-		--env-file apps/infra_redis/.env \
-		-f apps/infra_redis/docker-compose.yml up -d
+		--env-file apps/redis/.env \
+		-f apps/redis/docker-compose.yml up -d
 
-.PHONY: down-infra-redis
-down-infra-redis:
+.PHONY: down-redis
+down-redis:
 	docker compose \
 		--env-file .env \
-		--env-file apps/infra_redis/.env \
-		-f apps/infra_redis/docker-compose.yml down
+		--env-file apps/redis/.env \
+		-f apps/redis/docker-compose.yml down
 
 .PHONY: up-mage
 up-mage: create-network
@@ -1112,9 +1112,9 @@ ps:
 # ============================================================= 
 
 .PHONY: up-all
-up-all: up-traefik up-dozzle up-wud up-infra-postgres up-infra-mssql up-infra-mongodb up-infisical up-dockhand up-beszel up-blinko up-coder up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-metasearch up-datasette up-duplicati up-mailpit up-portracker up-gitlab up-pgadmin up-pgbackweb up-redash up-superset up-vscode up-openclaw up-uptime-kuma up-resume up-yopass up-tooljet up-pihole up-freqtrade
+up-all: up-traefik up-dozzle up-wud up-postgres up-mssql up-mongodb up-infisical up-dockhand up-beszel up-blinko up-coder up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-metasearch up-datasette up-duplicati up-mailpit up-portracker up-gitlab up-pgadmin up-pgbackweb up-redash up-superset up-vscode up-openclaw up-uptime-kuma up-resume up-yopass up-tooljet up-pihole up-freqtrade
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-freqtrade down-pihole down-tooljet down-yopass down-resume down-uptime-kuma down-openclaw down-vscode down-superset down-redash down-pgbackweb down-pgadmin down-gitlab down-portracker down-mailpit down-duplicati down-datasette down-metasearch down-memos down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-coder down-blinko down-beszel down-dockhand down-infisical down-infra-mongodb down-infra-mssql down-infra-postgres down-wud down-dozzle down-traefik
+down-all: down-freqtrade down-pihole down-tooljet down-yopass down-resume down-uptime-kuma down-openclaw down-vscode down-superset down-redash down-pgbackweb down-pgadmin down-gitlab down-portracker down-mailpit down-duplicati down-datasette down-metasearch down-memos down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-coder down-blinko down-beszel down-dockhand down-infisical down-mongodb down-mssql down-postgres down-wud down-dozzle down-traefik
 	@echo "All services stopped."

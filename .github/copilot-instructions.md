@@ -14,7 +14,7 @@ The project uses a "Base + App" folder strategy to allow launching subsets of se
 
 ## Infrastructure & Shared Services Pattern
 - **Service Naming (Dashes):** Use `infra-` prefix with dashes (e.g., e.g., `infra-postgres`, `infra-mssql`). This acts as the internal DNS hostname.
-- **Folder Naming (Underscores):** Use `infra_` prefix with underscores (e.g., `infra_postgres`, `infra_mssql`).
+- **Folder Naming (App Name Only):** Infrastructure app folders should use only the app name, with no `infra_` prefix/suffix pattern (e.g., `postgres`, `mssql`, `redis`).
 - **Container Naming (Underscores):** Use `infra_` prefix with underscores (e.g., `infra_postgres`, `infra_mssql`).
 - **Persistence & Networking (Underscores):** Strictly follow these patterns:
     - Network: `home_infra_<name>_network`
@@ -72,6 +72,7 @@ networks:
 # Naming Conventions
 
 - **Folder Names:** Use lowercase letters and underscores. If the app name is multiple words, use underscores (e.g., `myapp`, `my_app`).
+- **Infra Folder Names:** Use the plain app name only (e.g., `postgres`, `mssql`, `redis`). Do not use an `infra_` prefix/suffix pattern for folder names.
 - **Service Names:** Use lowercase letters and hyphens (e.g., `myapp`). If multiple services are needed, use `<appname>-<purpose>` (e.g., `myapp-db`).
 - **Container Names:** Follow the pattern `<appname>` (e.g., `myapp`). If multiple containers are needed, use `<appname>_<purpose>` (e.g., `myapp_db`).
 - **Network Names:** Use `home_<appname>_network` for internal networks (e.g., `home_myapp_network`).
