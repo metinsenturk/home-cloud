@@ -1,14 +1,14 @@
 # Home Cloud 🏠☁️
 
-A **modular, self-hosted infrastructure** built with **Traefik** and **Docker Compose**. Run your own suite of applications without vendor lock-in.
+A **modular, self-hosted infrastructure** built with **Traefik** and **Docker Compose**. Run your own suite of applications with make commands, all routed through a single Traefik entry point. Perfect for home labs, small businesses, or anyone looking to take control of their digital ecosystem.
 
 ## Overview
 
-Home Cloud is a production-ready orchestration framework for deploying and managing multiple interconnected Docker services. Use it to run dashboards, databases, automation tools, and more—all with automatic HTTPS routing and a unified entry point.
+Home Cloud is a production-ready orchestration framework for deploying and managing multiple interconnected Docker services. Use it to run dashboards, databases, automation tools, and more through a unified Traefik entry point.
 
 **Key Features:**
 - 🔄 **Modular Architecture**: Add/remove apps independently without affecting others
-- 🔐 **Automatic HTTPS**: Traefik handles SSL/TLS with Let's Encrypt integration
+- 🔐 **Centralized Routing**: Traefik provides a single entry point for your services
 - 🌐 **Subdomain Routing**: Access apps via `appname.yourdomain.com` (not `/appname` paths)
 - 📦 **Docker Compose**: Standard Docker tooling—no Kubernetes required
 - ⚡ **Easy Management**: Simple Make commands orchestrate everything
@@ -173,7 +173,7 @@ To use a shared service, reference it by its service name (e.g., `infra-postgres
 All public-facing apps route through **Traefik**, which:
 - Listens on ports **80** (HTTP) and **443** (HTTPS)
 - Auto-discovers apps via Docker labels
-- Issues SSL certificates via Let's Encrypt
+- Routes HTTP and HTTPS traffic based on your Traefik configuration
 - Routes based on hostnames (subdomains)
 
 **Example**: An app with the label `traefik.http.routers.myapp.rule=Host(myapp.yourdomain.com)` will be accessible at `https://myapp.yourdomain.com`.
