@@ -103,6 +103,22 @@
 
 NETWORK_NAME=home_network
 
+# Ordered list of all apps for up-all / down-all orchestration.
+# Infra services (traefik, dozzle, wud, databases) come first so they are
+# ready before apps start, and stopped last when tearing down.
+ALL_APPS := \
+	traefik dozzle wud \
+	postgres mssql mongodb redis \
+	infisical dockhand beszel \
+	blinko coder netdata metabase nocodb glance \
+	jupyter marimo mage memos metasearch datasette \
+	duplicati mailpit portracker homebridge homeassistant \
+	gitlab pgadmin pgbackweb redash superset \
+	vscode openclaw uptime-kuma resume yopass tooljet pihole freqtrade
+
+# Reverses a whitespace-separated list (used to derive down-all order from ALL_APPS).
+reverse = $(if $(1),$(call reverse,$(wordlist 2,$(words $(1)),$(1))) $(firstword $(1)))
+
 # Supported values: make | yaml
 # - make: dependency-free mode using a Make include file
 # - yaml: YAML mode parsed by yq
@@ -1112,9 +1128,9 @@ ps:
 # ============================================================= 
 
 .PHONY: up-all
-up-all: up-traefik up-dozzle up-wud up-postgres up-mssql up-mongodb up-infisical up-dockhand up-beszel up-blinko up-coder up-netdata up-metabase up-nocodb up-glance up-jupyter up-marimo up-mage up-memos up-metasearch up-datasette up-duplicati up-mailpit up-portracker up-gitlab up-pgadmin up-pgbackweb up-redash up-superset up-vscode up-openclaw up-uptime-kuma up-resume up-yopass up-tooljet up-pihole up-freqtrade
+up-all: $(addprefix up-,$(ALL_APPS))
 	@echo "All services launched."
 
 .PHONY: down-all
-down-all: down-freqtrade down-pihole down-tooljet down-yopass down-resume down-uptime-kuma down-openclaw down-vscode down-superset down-redash down-pgbackweb down-pgadmin down-gitlab down-portracker down-mailpit down-duplicati down-datasette down-metasearch down-memos down-mage down-marimo down-jupyter down-glance down-nocodb down-metabase down-netdata down-coder down-blinko down-beszel down-dockhand down-infisical down-mongodb down-mssql down-postgres down-wud down-dozzle down-traefik
+down-all: $(addprefix down-,$(call reverse,$(ALL_APPS)))
 	@echo "All services stopped."
