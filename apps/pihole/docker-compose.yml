@@ -28,6 +28,7 @@ services:
       - FTLCONF_dns_upstreams=${PIHOLE_DNS_UPSTREAMS}
       # Optional DHCP toggle. Keep disabled unless your network design supports DHCP relay/host mode.
       # - FTLCONF_dhcp_active=${PIHOLE_ENABLE_DHCP}
+      - FTLCONF_misc_dnsmasq_lines=${PIHOLE_WILDCARD_DNS}
     logging:
       driver: json-file
       options:
