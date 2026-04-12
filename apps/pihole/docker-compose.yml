@@ -14,6 +14,8 @@ services:
     volumes:
       # Persist Pi-hole state across container recreation and upgrades.
       - home_pihole_data:/etc/pihole
+      # Persist dnsmasq configuration for wildcard blocking (optional).
+      - ./dnsmasq.d/99-wildcard.conf:/etc/dnsmasq.d/99-wildcard.conf
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.pihole.rule=Host(`pihole.${PIHOLE_DOMAIN}`)"
